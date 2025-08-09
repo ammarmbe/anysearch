@@ -23,8 +23,10 @@ async function search(query: string, signal: AbortSignal) {
 }
 
 function Home() {
-  const [query, setQuery] = useState("");
   const queryClient = useQueryClient();
+
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,7 +44,7 @@ function Home() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-[10rem] lg:gap-9">
-      <div className="flex w-full max-w-3xl flex-col items-center justify-center gap-4 lg:gap-6">
+      <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 lg:max-w-3xl lg:gap-6">
         <Logo className="w-[80%]" />
         <TextField.Root
           ref={inputRef}
@@ -106,7 +108,7 @@ function Home() {
           {data}
         </div>
       ) : (
-        <Integrations />
+        <Integrations selected={selected} setSelected={setSelected} />
       )}
     </div>
   );

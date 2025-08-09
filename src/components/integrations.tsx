@@ -1,5 +1,6 @@
 import { authClient } from "@/utils/auth/client";
-import { Button, CheckboxCards } from "@radix-ui/themes";
+import { Button, Card, CheckboxCards } from "@radix-ui/themes";
+import { useQuery } from "@tanstack/react-query";
 import { LucideChevronDown } from "lucide-react";
 import { Accordion } from "radix-ui";
 import { GithubLogo } from "./icons/github";
@@ -7,31 +8,70 @@ import { GmailLogo } from "./icons/gmail";
 import { GoogleDriveLogo } from "./icons/google-drive";
 import { NotionLogo } from "./icons/notion";
 
-const INTEGRATIONS = [
+const INTEGRATIONS: {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  usernameField: (
+    user?: typeof authClient.$Infer.Session.user,
+  ) => string | undefined;
+}[] = [
   {
     id: "google",
     name: "Google",
     icon: <GoogleDriveLogo className="size-[4rem]" />,
+    usernameField: (user) => user?.email,
   },
   {
     id: "notion",
     name: "Notion",
     icon: <NotionLogo className="size-[4rem]" />,
+    usernameField: (user) => user?.email,
   },
   {
     id: "gmail",
     name: "Gmail",
     icon: <GmailLogo className="size-[4rem]" />,
+    usernameField: (user) => user?.email,
   },
   {
     id: "github",
     name: "Github",
     icon: <GithubLogo className="size-[4rem]" />,
+    usernameField: (user) =>
+      user?.githubUsername ? `@${user?.githubUsername}` : undefined,
   },
-];
+] as const;
 
-export function Integrations() {
+export function Integrations({
+  selected,
+  setSelected,
+}: {
+  selected: string[];
+  setSelected: (selected: string[]) => void;
+}) {
   const { data: session } = authClient.useSession();
+
+  const {
+    data: accounts,
+    isLoading: isAccountsLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      const { data, error } = await authClient.listAccounts();
+
+      if (error) {
+        throw new Error(error.statusText);
+      }
+
+      return data;
+    },
+    retry: (count, error) => {
+      if (error.message === "UNAUTHORIZED") return false;
+      return count < 3;
+    },
+  });
 
   return (
     <Accordion.Root
@@ -46,10 +86,10 @@ export function Integrations() {
             className="w-full justify-between [&[data-state=open]>svg]:rotate-180"
           >
             <Button size="4" variant="ghost" color="gray">
-              <p className="text-3 lg:text-4 text-gray-11 font-medium tracking-normal">
+              <p className="text-3 lg:text-4 text-gray-9 font-medium tracking-normal">
                 Integrations
               </p>
-              <LucideChevronDown className="size-[1rem] transition-transform lg:size-[1.25rem]" />
+              <LucideChevronDown className="text-gray-9 size-[1rem] transition-transform lg:size-[1.25rem]" />
             </Button>
           </Accordion.Trigger>
         </div>
@@ -59,32 +99,63 @@ export function Integrations() {
               gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
             }}
             className="grid gap-4 py-4 lg:gap-5 lg:py-5"
+            value={selected}
+            onValueChange={setSelected}
+            disabled={isAccountsLoading}
           >
-            {INTEGRATIONS.map((integration, index) => (
-              <CheckboxCards.Item
-                value={integration.id}
-                key={index}
-                className="flex flex-col items-center justify-start gap-3 px-[2.25rem] [&>button]:top-[0.625rem] [&>button]:right-[0.625rem] [&>button]:h-[1rem]"
-                onClick={async () => {
-                  if (session?.user) {
-                    await authClient.linkSocial({
-                      provider: "github",
-                    });
-                  } else {
-                    await authClient.signIn.social({
-                      provider: "github",
-                    });
-                  }
-                }}
-              >
-                <div className="flex items-center justify-center">
-                  {integration.icon}
-                </div>
-                <p className="text-3 text-gray-11 font-medium">
-                  {integration.name}
-                </p>
-              </CheckboxCards.Item>
-            ))}
+            {INTEGRATIONS.map((integration, index) =>
+              accounts?.some(
+                (account) => account.provider === integration.id,
+              ) ? (
+                <CheckboxCards.Item
+                  value={integration.id}
+                  key={index}
+                  className="flex flex-col items-center justify-start gap-3 px-[2.25rem] [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
+                >
+                  <div className="flex items-center justify-center">
+                    {integration.icon}
+                  </div>
+                  <p className="text-3 text-gray-11 font-medium">
+                    {integration.name}
+                  </p>
+                  <p className="text-2 text-gray-10 flex h-6 items-center justify-center">
+                    {integration.usernameField(session?.user)}
+                  </p>
+                </CheckboxCards.Item>
+              ) : (
+                <Card
+                  key={index}
+                  className="flex flex-col items-center justify-start gap-3 p-[0.875rem]"
+                >
+                  <div className="flex items-center justify-center">
+                    {integration.icon}
+                  </div>
+                  <p className="text-3 text-gray-11 font-medium">
+                    {integration.name}
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      if (!session?.user) {
+                        await authClient.signIn.social({
+                          provider: integration.id,
+                        });
+                      } else {
+                        await authClient.linkSocial({
+                          provider: integration.id,
+                        });
+                      }
+
+                      refetch();
+                    }}
+                    variant="outline"
+                    color="gray"
+                    className="w-full"
+                  >
+                    Link
+                  </Button>
+                </Card>
+              ),
+            )}
           </CheckboxCards.Root>
         </Accordion.Content>
       </Accordion.Item>
