@@ -1,11 +1,12 @@
 /// <reference types="vite/client" />
+import { Theme } from "@radix-ui/themes";
 import {
   createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import globalCss from "../global.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,29 +19,24 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "AnySearch",
       },
     ],
+    links: [{ rel: "stylesheet", href: globalCss }],
   }),
   component: RootComponent,
 });
 
 function RootComponent() {
   return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
-  );
-}
-
-function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
-  return (
     <html>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <Theme accentColor="jade">
+          <Outlet />
+        </Theme>
         <Scripts />
       </body>
     </html>
