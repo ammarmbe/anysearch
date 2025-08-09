@@ -1,11 +1,13 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { reactStartCookies } from "better-auth/react-start";
 import db from "../db";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
+  plugins: [reactStartCookies()],
   account: {
     accountLinking: {
       enabled: true,
@@ -14,6 +16,14 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       githubUsername: {
+        type: "string",
+        required: false,
+      },
+      googleUsername: {
+        type: "string",
+        required: false,
+      },
+      notionUsername: {
         type: "string",
         required: false,
       },

@@ -3,7 +3,7 @@ import { request } from "@octokit/request";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import { LucideStar } from "lucide-react";
-import { authClient } from "./auth/client";
+import { authClient } from "../utils/auth/client";
 
 export async function githubSearch(query: string, signal: AbortSignal) {
   const { data: accessToken, error: accessTokenError } =

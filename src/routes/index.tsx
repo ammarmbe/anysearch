@@ -1,6 +1,7 @@
 import { Logo } from "@/components/icons/logo";
 import { Integrations } from "@/components/integrations";
-import { githubSearch } from "@/utils/search";
+import { githubSearch } from "@/search/github";
+import { GoogleDriveSearch } from "@/search/google-drive";
 import { IconButton, Spinner, TextField } from "@radix-ui/themes";
 import {
   keepPreviousData,
@@ -9,15 +10,25 @@ import {
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { LucideSearch, LucideX } from "lucide-react";
-import { useRef, useState } from "react";
+import { ReactNode, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
 
-async function search(query: string, signal: AbortSignal) {
-  const data = await githubSearch(query, signal);
+async function search(query: string, selected: string[], signal: AbortSignal) {
+  let data: ReactNode[] = [];
+
+  if (selected.includes("github")) {
+    data = data.concat(githubSearch(query, signal));
+  }
+
+  if (selected.includes("google")) {
+    data = data.concat(GoogleDriveSearch(query, signal));
+  }
+
+  data = await Promise.all(data);
 
   return data;
 }
@@ -31,10 +42,10 @@ function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data, isFetching, isPlaceholderData, isLoading } = useQuery({
-    queryKey: ["search", query],
+    queryKey: ["search", query, selected],
     queryFn: !query
       ? () => null
-      : async ({ signal }) => await search(query, signal),
+      : async ({ signal }) => await search(query, selected, signal),
     placeholderData: keepPreviousData,
   });
 

@@ -17,6 +17,8 @@ model User {
   createdAt      DateTime
   updatedAt      DateTime
   githubUsername String?
+  googleUsername String?
+  notionUsername String?
   sessions       Session[]
   accounts       Account[]
 

@@ -15,12 +15,14 @@ const INTEGRATIONS: {
   usernameField: (
     user?: typeof authClient.$Infer.Session.user,
   ) => string | undefined;
+  scopes?: string[];
 }[] = [
   {
     id: "google",
     name: "Google",
     icon: <GoogleDriveLogo className="size-[4rem]" />,
     usernameField: (user) => user?.email,
+    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
   },
   {
     id: "notion",
@@ -138,10 +140,12 @@ export function Integrations({
                       if (!session?.user) {
                         await authClient.signIn.social({
                           provider: integration.id,
+                          scopes: integration.scopes,
                         });
                       } else {
                         await authClient.linkSocial({
                           provider: integration.id,
+                          scopes: integration.scopes,
                         });
                       }
 
