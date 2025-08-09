@@ -1,3 +1,4 @@
+import { authClient } from "@/utils/auth/client";
 import { Button, CheckboxCards } from "@radix-ui/themes";
 import { LucideChevronDown } from "lucide-react";
 import { Accordion } from "radix-ui";
@@ -30,6 +31,8 @@ const INTEGRATIONS = [
 ];
 
 export function Integrations() {
+  const { data: session } = authClient.useSession();
+
   return (
     <Accordion.Root
       collapsible
@@ -62,6 +65,17 @@ export function Integrations() {
                 value={integration.id}
                 key={index}
                 className="flex flex-col items-center justify-start gap-3 px-[2.25rem] [&>button]:top-[0.625rem] [&>button]:right-[0.625rem] [&>button]:h-[1rem]"
+                onClick={async () => {
+                  if (session?.user) {
+                    await authClient.linkSocial({
+                      provider: "github",
+                    });
+                  } else {
+                    await authClient.signIn.social({
+                      provider: "github",
+                    });
+                  }
+                }}
               >
                 <div className="flex items-center justify-center">
                   {integration.icon}
