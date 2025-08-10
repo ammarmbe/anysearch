@@ -1,7 +1,10 @@
-import { Logo } from "@/components/icons/logo";
-import { Integrations } from "@/components/integrations";
-import { githubSearch } from "@/search/github";
-import { GoogleDriveSearch } from "@/search/google-drive";
+import Logo from "@/components/icons/logo";
+import Integrations from "@/components/integrations";
+import githubSearch from "@/search/github";
+import GmailSearch from "@/search/gmail";
+import GoogleDriveSearch from "@/search/google-drive";
+import { INTEGRATIONS, useUser } from "@/utils/helpers";
+import type { getUserFn } from "@/utils/server-functions";
 import { IconButton, Spinner, TextField } from "@radix-ui/themes";
 import {
   keepPreviousData,
@@ -10,22 +13,31 @@ import {
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { LucideSearch, LucideX } from "lucide-react";
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
 
-async function search(query: string, selected: string[], signal: AbortSignal) {
+async function search(
+  user: NonNullable<Awaited<ReturnType<typeof getUserFn>>>,
+  query: string,
+  selected: string[],
+  signal: AbortSignal,
+) {
   let data: ReactNode[] = [];
 
   if (selected.includes("github")) {
-    data = data.concat(githubSearch(query, signal));
+    data = data.concat(githubSearch(user, query, signal));
   }
 
   if (selected.includes("google")) {
-    data = data.concat(GoogleDriveSearch(query, signal));
+    data = data.concat(GoogleDriveSearch(user, query, signal));
+  }
+
+  if (selected.includes("gmail")) {
+    data = data.concat(GmailSearch(user, query, signal));
   }
 
   data = await Promise.all(data);
@@ -35,17 +47,21 @@ async function search(query: string, selected: string[], signal: AbortSignal) {
 
 function Home() {
   const queryClient = useQueryClient();
+  const { data: user } = useUser();
 
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<(typeof INTEGRATIONS)[number][]>([
+    ...INTEGRATIONS,
+  ]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data, isFetching, isPlaceholderData, isLoading } = useQuery({
     queryKey: ["search", query, selected],
-    queryFn: !query
-      ? () => null
-      : async ({ signal }) => await search(query, selected, signal),
+    queryFn:
+      !query || !user
+        ? () => null
+        : async ({ signal }) => await search(user, query, selected, signal),
     placeholderData: keepPreviousData,
   });
 
@@ -53,12 +69,20 @@ function Home() {
     setQuery(value);
   }, 500);
 
+  useEffect(() => {
+    if (user) {
+      setSelected(selected.filter((integration) => user[integration]));
+    }
+  }, [user]);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-[10rem] lg:gap-9">
       <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 lg:max-w-3xl lg:gap-6">
         <Logo className="w-[80%]" />
         <TextField.Root
           ref={inputRef}
+          id="search"
+          type="search"
           size="3"
           placeholder="Search"
           className="lg:text-4 w-full lg:h-8"

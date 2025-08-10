@@ -1,79 +1,66 @@
-import { authClient } from "@/utils/auth/client";
+import { INTEGRATIONS, useUser } from "@/utils/helpers";
+import { githubLoginFn, googleLoginFn } from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
-import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { LucideChevronDown } from "lucide-react";
 import { Accordion } from "radix-ui";
-import { GithubLogo } from "./icons/github";
-import { GmailLogo } from "./icons/gmail";
-import { GoogleDriveLogo } from "./icons/google-drive";
-import { NotionLogo } from "./icons/notion";
+import { useMemo } from "react";
+import GithubLogo from "./icons/github";
+import GmailLogo from "./icons/gmail";
+import GoogleDriveLogo from "./icons/google-drive";
+import NotionLogo from "./icons/notion";
 
-const INTEGRATIONS: {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  usernameField: (
-    user?: typeof authClient.$Infer.Session.user,
-  ) => string | undefined;
-  scopes?: string[];
-}[] = [
-  {
-    id: "google",
-    name: "Google",
-    icon: <GoogleDriveLogo className="size-[4rem]" />,
-    usernameField: (user) => user?.email,
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-  },
-  {
-    id: "notion",
-    name: "Notion",
-    icon: <NotionLogo className="size-[4rem]" />,
-    usernameField: (user) => user?.email,
-  },
-  {
-    id: "gmail",
-    name: "Gmail",
-    icon: <GmailLogo className="size-[4rem]" />,
-    usernameField: (user) => user?.email,
-  },
-  {
-    id: "github",
-    name: "Github",
-    icon: <GithubLogo className="size-[4rem]" />,
-    usernameField: (user) =>
-      user?.githubUsername ? `@${user?.githubUsername}` : undefined,
-  },
-] as const;
-
-export function Integrations({
+export default function Integrations({
   selected,
   setSelected,
 }: {
-  selected: string[];
-  setSelected: (selected: string[]) => void;
+  selected: (typeof INTEGRATIONS)[number][];
+  setSelected: (selected: (typeof INTEGRATIONS)[number][]) => void;
 }) {
-  const { data: session } = authClient.useSession();
+  const { data: user, isLoading: isUserLoading } = useUser();
+  const githubLogin = useServerFn(githubLoginFn);
+  const googleLogin = useServerFn(googleLoginFn);
 
-  const {
-    data: accounts,
-    isLoading: isAccountsLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ["accounts"],
-    queryFn: async () => {
-      const { data, error } = await authClient.listAccounts();
-
-      if (error) {
-        throw new Error(error.statusText);
-      }
-
-      return data;
-    },
-    retry: (count, error) => {
-      if (error.message === "UNAUTHORIZED") return false;
-      return count < 3;
-    },
-  });
+  const integrations = useMemo(
+    () =>
+      [
+        {
+          id: "google",
+          name: "Google",
+          icon: <GoogleDriveLogo className="size-[4rem]" />,
+          exists: !!user?.googleId,
+          usernameField: user?.googleName,
+          loginFn: googleLogin,
+        },
+        {
+          id: "notion",
+          name: "Notion",
+          icon: <NotionLogo className="size-[4rem]" />,
+          exists: !!user?.notionId,
+          usernameField: user?.notionName,
+          loginFn: () => Promise.resolve(),
+        },
+        {
+          id: "gmail",
+          name: "Gmail",
+          icon: <GmailLogo className="size-[4rem]" />,
+          exists: !!user?.googleId,
+          usernameField: user?.googleName,
+          loginFn: googleLogin,
+        },
+        {
+          id: "github",
+          name: "Github",
+          icon: <GithubLogo className="size-[4rem]" />,
+          exists: !!user?.githubId,
+          usernameField: user?.githubUsername
+            ? `@${user?.githubUsername}`
+            : undefined,
+          loginFn: githubLogin,
+        },
+      ] as const,
+    [user, githubLogin, googleLogin],
+  );
 
   return (
     <Accordion.Root
@@ -102,32 +89,34 @@ export function Integrations({
             }}
             className="grid gap-4 py-4 lg:gap-5 lg:py-5"
             value={selected}
-            onValueChange={setSelected}
-            disabled={isAccountsLoading}
+            onValueChange={(value) =>
+              setSelected(value as (typeof INTEGRATIONS)[number][])
+            }
+            disabled={isUserLoading}
           >
-            {INTEGRATIONS.map((integration, index) =>
-              accounts?.some(
-                (account) => account.provider === integration.id,
-              ) ? (
+            {integrations.map((integration, index) =>
+              integration.exists ? (
                 <CheckboxCards.Item
                   value={integration.id}
                   key={index}
-                  className="flex flex-col items-center justify-start gap-3 px-[2.25rem] [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
+                  className="flex flex-col items-center justify-start gap-3 px-3 text-center [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
                 >
-                  <div className="flex items-center justify-center">
-                    {integration.icon}
+                  <div className="flex flex-col items-center justify-center gap-3 px-[2.25rem]">
+                    <div className="flex items-center justify-center">
+                      {integration.icon}
+                    </div>
+                    <p className="text-3 text-gray-11 font-medium">
+                      {integration.name}
+                    </p>
                   </div>
-                  <p className="text-3 text-gray-11 font-medium">
-                    {integration.name}
-                  </p>
                   <p className="text-2 text-gray-10 flex h-6 items-center justify-center">
-                    {integration.usernameField(session?.user)}
+                    {integration.usernameField}
                   </p>
                 </CheckboxCards.Item>
               ) : (
                 <Card
                   key={index}
-                  className="flex flex-col items-center justify-start gap-3 p-[0.875rem]"
+                  className="flex flex-col items-center justify-start gap-3 p-[0.875rem] text-center"
                 >
                   <div className="flex items-center justify-center">
                     {integration.icon}
@@ -136,21 +125,7 @@ export function Integrations({
                     {integration.name}
                   </p>
                   <Button
-                    onClick={async () => {
-                      if (!session?.user) {
-                        await authClient.signIn.social({
-                          provider: integration.id,
-                          scopes: integration.scopes,
-                        });
-                      } else {
-                        await authClient.linkSocial({
-                          provider: integration.id,
-                          scopes: integration.scopes,
-                        });
-                      }
-
-                      refetch();
-                    }}
+                    onClick={async () => await integration.loginFn()}
                     variant="outline"
                     color="gray"
                     className="w-full"

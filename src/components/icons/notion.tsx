@@ -1,4 +1,4 @@
-export function NotionLogo({ className }: { className?: string }) {
+export default function NotionLogo({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

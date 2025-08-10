@@ -12,7 +12,8 @@ import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { ServerRoute as ApiAuthSplatServerRouteImport } from './routes/api/auth.$'
+import { ServerRoute as ApiAuthCallbackGoogleServerRouteImport } from './routes/api/auth.callback.google'
+import { ServerRoute as ApiAuthCallbackGithubServerRouteImport } from './routes/api/auth.callback.github'
 
 const rootServerRouteImport = createServerRootRoute()
 
@@ -21,11 +22,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSplatServerRoute = ApiAuthSplatServerRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
+const ApiAuthCallbackGoogleServerRoute =
+  ApiAuthCallbackGoogleServerRouteImport.update({
+    id: '/api/auth/callback/google',
+    path: '/api/auth/callback/google',
+    getParentRoute: () => rootServerRouteImport,
+  } as any)
+const ApiAuthCallbackGithubServerRoute =
+  ApiAuthCallbackGithubServerRouteImport.update({
+    id: '/api/auth/callback/github',
+    path: '/api/auth/callback/github',
+    getParentRoute: () => rootServerRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -49,25 +57,29 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
 }
 export interface FileServerRoutesByFullPath {
-  '/api/auth/$': typeof ApiAuthSplatServerRoute
+  '/api/auth/callback/github': typeof ApiAuthCallbackGithubServerRoute
+  '/api/auth/callback/google': typeof ApiAuthCallbackGoogleServerRoute
 }
 export interface FileServerRoutesByTo {
-  '/api/auth/$': typeof ApiAuthSplatServerRoute
+  '/api/auth/callback/github': typeof ApiAuthCallbackGithubServerRoute
+  '/api/auth/callback/google': typeof ApiAuthCallbackGoogleServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
-  '/api/auth/$': typeof ApiAuthSplatServerRoute
+  '/api/auth/callback/github': typeof ApiAuthCallbackGithubServerRoute
+  '/api/auth/callback/google': typeof ApiAuthCallbackGoogleServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/auth/$'
+  fullPaths: '/api/auth/callback/github' | '/api/auth/callback/google'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/auth/$'
-  id: '__root__' | '/api/auth/$'
+  to: '/api/auth/callback/github' | '/api/auth/callback/google'
+  id: '__root__' | '/api/auth/callback/github' | '/api/auth/callback/google'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
-  ApiAuthSplatServerRoute: typeof ApiAuthSplatServerRoute
+  ApiAuthCallbackGithubServerRoute: typeof ApiAuthCallbackGithubServerRoute
+  ApiAuthCallbackGoogleServerRoute: typeof ApiAuthCallbackGoogleServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -83,11 +95,18 @@ declare module '@tanstack/react-router' {
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatServerRouteImport
+    '/api/auth/callback/google': {
+      id: '/api/auth/callback/google'
+      path: '/api/auth/callback/google'
+      fullPath: '/api/auth/callback/google'
+      preLoaderRoute: typeof ApiAuthCallbackGoogleServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/auth/callback/github': {
+      id: '/api/auth/callback/github'
+      path: '/api/auth/callback/github'
+      fullPath: '/api/auth/callback/github'
+      preLoaderRoute: typeof ApiAuthCallbackGithubServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
   }
@@ -100,7 +119,8 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiAuthSplatServerRoute: ApiAuthSplatServerRoute,
+  ApiAuthCallbackGithubServerRoute: ApiAuthCallbackGithubServerRoute,
+  ApiAuthCallbackGoogleServerRoute: ApiAuthCallbackGoogleServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport
   ._addFileChildren(rootServerRouteChildren)

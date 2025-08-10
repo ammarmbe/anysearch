@@ -9,64 +9,41 @@ datasource db {
 }
 
 model User {
-  id             String    @id
-  name           String
-  email          String
-  emailVerified  Boolean
-  image          String?
-  createdAt      DateTime
-  updatedAt      DateTime
-  githubUsername String?
-  googleUsername String?
-  notionUsername String?
-  sessions       Session[]
-  accounts       Account[]
+  id String @id @default(uuid())
 
-  @@unique([email])
-  @@map("user")
+  email String @unique
+
+  github            Boolean @default(false)
+  githubId          String?
+  githubUsername    String?
+  githubAccessToken String?
+
+  google            Boolean @default(false)
+  googleId          String?
+  googleName        String?
+  googleAccessToken String?
+
+  notion            Boolean @default(false)
+  notionId          String?
+  notionName        String?
+  notionAccessToken String?
+
+  gmail Boolean @default(false)
+
+  sessions Session[]
+
+  createdAt DateTime @default(now())
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id String @id
 
-  @@unique([token])
-  @@map("session")
-}
+  secretHash Bytes
 
-model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
+  userId String
 
-  @@map("account")
-}
+  user User @relation(fields: [userId], references: [id])
 
-model Verification {
-  id         String    @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
-
-  @@map("verification")
+  createdAt      DateTime @default(now())
+  lastVerifiedAt DateTime @default(now())
 }

@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "public"."User" ADD COLUMN     "github" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "gmail" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "google" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "notion" BOOLEAN NOT NULL DEFAULT false;

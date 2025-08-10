@@ -1,28 +1,20 @@
-import { GithubLogo } from "@/components/icons/github";
+import GithubLogo from "@/components/icons/github";
+import type { getUserFn } from "@/utils/server-functions";
 import { request } from "@octokit/request";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import { LucideStar } from "lucide-react";
-import { authClient } from "../utils/auth/client";
 
-export async function githubSearch(query: string, signal: AbortSignal) {
-  const { data: accessToken, error: accessTokenError } =
-    await authClient.getAccessToken({
-      providerId: "github",
-    });
-  const { data: session, error: sessionError } = await authClient.getSession();
-
-  if (accessTokenError || sessionError) {
-    throw new Error(accessTokenError?.message ?? sessionError?.message);
-  }
-
-  const githubUsername = session?.user.githubUsername;
-
+export default async function githubSearch(
+  user: NonNullable<Awaited<ReturnType<typeof getUserFn>>>,
+  query: string,
+  signal: AbortSignal,
+) {
   const { data } = await request("GET /search/repositories", {
-    q: `${query} user:${githubUsername}`,
+    q: `${query} user:${user.githubUsername} is:private`,
     per_page: 10,
     headers: {
-      Authorization: `Bearer ${accessToken.accessToken}`,
+      Authorization: `Bearer ${user.githubAccessToken}`,
     },
     signal,
   });
@@ -39,7 +31,7 @@ export async function githubSearch(query: string, signal: AbortSignal) {
           <GithubLogo className="size-4" />
           <p className="text-2 text-gray-10 font-medium">GitHub</p>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
           <p className="text-4 font-medium">{item.full_name}</p>
           <Badge
             className="flex items-center gap-1"

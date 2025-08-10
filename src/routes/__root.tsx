@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { NotFound } from "@/components/not-found";
+import NotFound from "@/components/not-found";
 import { Theme } from "@radix-ui/themes";
 import { QueryClient } from "@tanstack/react-query";
 import {

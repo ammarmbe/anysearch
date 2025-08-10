@@ -1,4 +1,4 @@
-export function GoogleDriveLogo({ className }: { className?: string }) {
+export default function GoogleDriveLogo({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
