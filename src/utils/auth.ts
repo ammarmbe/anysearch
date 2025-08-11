@@ -1,5 +1,5 @@
 import type { Session } from "@/generated/prisma/client";
-import { GitHub, Google } from "arctic";
+import { GitHub, Google, Notion } from "arctic";
 import db from "./db";
 
 // Types
@@ -18,13 +18,19 @@ const activityCheckIntervalSeconds = 60 * 60 * 24; // 1 day
 export const github = new GitHub(
   process.env["GITHUB_CLIENT_ID"]!,
   process.env["GITHUB_CLIENT_SECRET"]!,
-  null,
+  `${process.env["BASE_URL"]}/api/auth/callback/github`,
 );
 
 export const google = new Google(
   process.env["GOOGLE_CLIENT_ID"]!,
   process.env["GOOGLE_CLIENT_SECRET"]!,
   `${process.env["BASE_URL"]}/api/auth/callback/google`,
+);
+
+export const notion = new Notion(
+  process.env["NOTION_CLIENT_ID"]!,
+  process.env["NOTION_CLIENT_SECRET"]!,
+  `${process.env["BASE_URL"]}/api/auth/callback/notion`,
 );
 
 // Helpers
@@ -63,7 +69,7 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 
 // Functions
 
-export async function createSession(userId: string) {
+export async function createSession(sessionData?: Partial<Session>) {
   const now = new Date();
 
   const id = generateSecureRandomString();
@@ -74,20 +80,37 @@ export async function createSession(userId: string) {
 
   const session: TSessionWithToken = {
     id,
-    userId,
+    token,
     secretHash,
     createdAt: now,
     lastVerifiedAt: now,
-    token,
+
+    githubUsername: null,
+    githubAccessToken: null,
+
+    notionUsername: null,
+    notionAccessToken: null,
+
+    googleDriveUsername: null,
+    googleDriveAccessToken: null,
+    googleDriveAccessTokenExpiresAt: null,
+    googleDriveRefreshToken: null,
+    googleDriveRefreshTokenExpiresAt: null,
+
+    gmailUsername: null,
+    gmailAccessToken: null,
+    gmailAccessTokenExpiresAt: null,
+    gmailRefreshToken: null,
+    gmailRefreshTokenExpiresAt: null,
   };
 
   await db.session.create({
     data: {
       id,
-      userId,
       secretHash,
       createdAt: now,
       lastVerifiedAt: now,
+      ...sessionData,
     },
   });
 
@@ -101,6 +124,7 @@ export async function validateSessionToken(token: string) {
   if (tokenParts.length !== 2) {
     return null;
   }
+
   const sessionId = tokenParts[0];
   const sessionSecret = tokenParts[1];
 
@@ -115,6 +139,7 @@ export async function validateSessionToken(token: string) {
 
   const tokenSecretHash = await hashSecret(sessionSecret);
   const validSecret = constantTimeEqual(tokenSecretHash, session.secretHash);
+
   if (!validSecret) {
     return null;
   }

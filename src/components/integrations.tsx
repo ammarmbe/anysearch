@@ -1,4 +1,4 @@
-import { INTEGRATIONS, useUser } from "@/utils/helpers";
+import { INTEGRATIONS, useSession } from "@/utils/helpers";
 import {
   githubLoginFn,
   gmailLoginFn,
@@ -21,7 +21,7 @@ export default function Integrations({
   selected: (typeof INTEGRATIONS)[number][];
   setSelected: (selected: (typeof INTEGRATIONS)[number][]) => void;
 }) {
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { data: session, isLoading: isSessionLoading } = useSession();
   const githubLogin = useServerFn(githubLoginFn);
   const googleDriveLogin = useServerFn(googleDriveLoginFn);
   const gmailLogin = useServerFn(gmailLoginFn);
@@ -33,38 +33,38 @@ export default function Integrations({
           id: "googleDrive",
           name: "Google Drive",
           icon: <GoogleDriveLogo className="size-[4rem]" />,
-          exists: !!user?.googleDriveId,
-          usernameField: user?.googleDriveName,
+          exists: !!session?.googleDriveUsername,
+          usernameField: session?.googleDriveUsername,
           loginFn: googleDriveLogin,
         },
         {
           id: "notion",
           name: "Notion",
           icon: <NotionLogo className="size-[4rem]" />,
-          exists: !!user?.notionId,
-          usernameField: user?.notionName,
+          exists: !!session?.notionUsername,
+          usernameField: session?.notionUsername,
           loginFn: () => Promise.resolve(),
         },
         {
           id: "gmail",
           name: "Gmail",
           icon: <GmailLogo className="size-[4rem]" />,
-          exists: !!user?.gmailId,
-          usernameField: user?.gmailName,
+          exists: !!session?.gmailUsername,
+          usernameField: session?.gmailUsername,
           loginFn: gmailLogin,
         },
         {
           id: "github",
           name: "Github",
           icon: <GithubLogo className="size-[4rem]" />,
-          exists: !!user?.githubId,
-          usernameField: user?.githubUsername
-            ? `@${user?.githubUsername}`
+          exists: !!session?.githubUsername,
+          usernameField: session?.githubUsername
+            ? `@${session?.githubUsername}`
             : undefined,
           loginFn: githubLogin,
         },
       ] as const,
-    [user, githubLogin, googleDriveLogin],
+    [session, githubLogin, googleDriveLogin],
   );
 
   return (
@@ -97,7 +97,7 @@ export default function Integrations({
             onValueChange={(value) =>
               setSelected(value as (typeof INTEGRATIONS)[number][])
             }
-            disabled={isUserLoading}
+            disabled={isSessionLoading}
           >
             {integrations.map((integration, index) =>
               integration.exists ? (

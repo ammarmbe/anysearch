@@ -3,8 +3,8 @@ import Integrations from "@/components/integrations";
 import githubSearch from "@/search/github";
 import GmailSearch from "@/search/gmail";
 import GoogleDriveSearch from "@/search/google-drive";
-import { INTEGRATIONS, useUser } from "@/utils/helpers";
-import type { getUserFn } from "@/utils/server-functions";
+import { INTEGRATIONS, useSession } from "@/utils/helpers";
+import type { getSessionFn } from "@/utils/server-functions";
 import { IconButton, Spinner, TextField } from "@radix-ui/themes";
 import {
   keepPreviousData,
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
 });
 
 async function search(
-  user: NonNullable<Awaited<ReturnType<typeof getUserFn>>>,
+  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>,
   query: string,
   selected: string[],
   signal: AbortSignal,
@@ -29,7 +29,7 @@ async function search(
   let data: ReactNode[] = [];
 
   if (selected.includes("github")) {
-    data = data.concat(githubSearch(user, query, signal));
+    data = data.concat(githubSearch(session, query, signal));
   }
 
   if (selected.includes("googleDrive")) {
@@ -37,7 +37,7 @@ async function search(
   }
 
   if (selected.includes("gmail")) {
-    data = data.concat(GmailSearch(user, query, signal));
+    data = data.concat(GmailSearch(session, query, signal));
   }
 
   data = await Promise.all(data);
@@ -47,7 +47,7 @@ async function search(
 
 function Home() {
   const queryClient = useQueryClient();
-  const { data: user } = useUser();
+  const { data: session } = useSession();
 
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof INTEGRATIONS)[number][]>([
@@ -59,9 +59,9 @@ function Home() {
   const { data, isFetching, isPlaceholderData, isLoading } = useQuery({
     queryKey: ["search", query, selected],
     queryFn:
-      !query || !user
+      !query || !session
         ? () => null
-        : async ({ signal }) => await search(user, query, selected, signal),
+        : async ({ signal }) => await search(session, query, selected, signal),
     placeholderData: keepPreviousData,
   });
 
@@ -70,10 +70,12 @@ function Home() {
   }, 500);
 
   useEffect(() => {
-    if (user) {
-      setSelected(selected.filter((integration) => user[integration]));
+    if (session) {
+      setSelected(
+        selected.filter((integration) => session[`${integration}Username`]),
+      );
     }
-  }, [user]);
+  }, [session]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-[10rem] lg:gap-9">

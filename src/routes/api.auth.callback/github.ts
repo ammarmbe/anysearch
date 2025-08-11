@@ -1,4 +1,4 @@
-import { createSession, github } from "@/utils/auth";
+import { createSession, getSession, github } from "@/utils/auth";
 import db from "@/utils/db";
 import { redirect } from "@tanstack/react-router";
 import {
@@ -48,38 +48,36 @@ export const ServerRoute = createServerFileRoute(
     });
 
     const githubUser = await githubUserResponse.json();
-    const githubUserId = githubUser.id.toString();
     const githubUsername = githubUser.login;
-    const githubEmail = githubUser.email;
 
-    const existingUser = await db.user.findUnique({
-      where: {
-        email: githubEmail,
-      },
-    });
+    const sessionId = getCookie("session")?.split(".")[0];
 
-    if (existingUser !== null) {
-      const session = await createSession(existingUser.id);
+    let existingSession = null;
 
-      await db.user.update({
-        where: {
-          id: existingUser.id,
-        },
+    if (sessionId) {
+      existingSession = await getSession(sessionId);
+    }
+
+    if (existingSession !== null) {
+      await db.session.update({
+        where: { id: existingSession.id },
         data: {
-          github: true,
-          githubId: githubUserId,
           githubUsername: githubUsername,
           githubAccessToken: accessToken,
         },
       });
 
-      setCookie("session", session.token, {
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
-        maxAge: 60 * 60 * 24 * 30,
-        sameSite: "lax",
-      });
+      setCookie(
+        "session",
+        existingSession.id + "." + existingSession.secretHash,
+        {
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          httpOnly: true,
+          maxAge: 60 * 60 * 24 * 30,
+          sameSite: "lax",
+        },
+      );
 
       throw redirect({
         statusCode: 302,
@@ -87,17 +85,10 @@ export const ServerRoute = createServerFileRoute(
       });
     }
 
-    const user = await db.user.create({
-      data: {
-        email: githubEmail,
-        github: true,
-        githubId: githubUserId,
-        githubUsername: githubUsername,
-        githubAccessToken: accessToken,
-      },
+    const session = await createSession({
+      githubUsername: githubUsername,
+      githubAccessToken: accessToken,
     });
-
-    const session = await createSession(user.id);
 
     setCookie("session", session.token, {
       path: "/",

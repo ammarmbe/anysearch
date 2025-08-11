@@ -12,8 +12,9 @@ import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { ServerRoute as ApiAuthCallbackGoogleServerRouteImport } from './routes/api/auth.callback.google'
-import { ServerRoute as ApiAuthCallbackGithubServerRouteImport } from './routes/api/auth.callback.github'
+import { ServerRoute as ApiAuthCallbackNotionServerRouteImport } from './routes/api.auth.callback/notion'
+import { ServerRoute as ApiAuthCallbackGoogleServerRouteImport } from './routes/api.auth.callback/google'
+import { ServerRoute as ApiAuthCallbackGithubServerRouteImport } from './routes/api.auth.callback/github'
 
 const rootServerRouteImport = createServerRootRoute()
 
@@ -22,6 +23,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthCallbackNotionServerRoute =
+  ApiAuthCallbackNotionServerRouteImport.update({
+    id: '/api/auth/callback/notion',
+    path: '/api/auth/callback/notion',
+    getParentRoute: () => rootServerRouteImport,
+  } as any)
 const ApiAuthCallbackGoogleServerRoute =
   ApiAuthCallbackGoogleServerRouteImport.update({
     id: '/api/auth/callback/google',
@@ -59,27 +66,41 @@ export interface RootRouteChildren {
 export interface FileServerRoutesByFullPath {
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubServerRoute
   '/api/auth/callback/google': typeof ApiAuthCallbackGoogleServerRoute
+  '/api/auth/callback/notion': typeof ApiAuthCallbackNotionServerRoute
 }
 export interface FileServerRoutesByTo {
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubServerRoute
   '/api/auth/callback/google': typeof ApiAuthCallbackGoogleServerRoute
+  '/api/auth/callback/notion': typeof ApiAuthCallbackNotionServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubServerRoute
   '/api/auth/callback/google': typeof ApiAuthCallbackGoogleServerRoute
+  '/api/auth/callback/notion': typeof ApiAuthCallbackNotionServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/auth/callback/github' | '/api/auth/callback/google'
+  fullPaths:
+    | '/api/auth/callback/github'
+    | '/api/auth/callback/google'
+    | '/api/auth/callback/notion'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/auth/callback/github' | '/api/auth/callback/google'
-  id: '__root__' | '/api/auth/callback/github' | '/api/auth/callback/google'
+  to:
+    | '/api/auth/callback/github'
+    | '/api/auth/callback/google'
+    | '/api/auth/callback/notion'
+  id:
+    | '__root__'
+    | '/api/auth/callback/github'
+    | '/api/auth/callback/google'
+    | '/api/auth/callback/notion'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
   ApiAuthCallbackGithubServerRoute: typeof ApiAuthCallbackGithubServerRoute
   ApiAuthCallbackGoogleServerRoute: typeof ApiAuthCallbackGoogleServerRoute
+  ApiAuthCallbackNotionServerRoute: typeof ApiAuthCallbackNotionServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,6 +116,13 @@ declare module '@tanstack/react-router' {
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
+    '/api/auth/callback/notion': {
+      id: '/api/auth/callback/notion'
+      path: '/api/auth/callback/notion'
+      fullPath: '/api/auth/callback/notion'
+      preLoaderRoute: typeof ApiAuthCallbackNotionServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
     '/api/auth/callback/google': {
       id: '/api/auth/callback/google'
       path: '/api/auth/callback/google'
@@ -121,6 +149,7 @@ export const routeTree = rootRouteImport
 const rootServerRouteChildren: RootServerRouteChildren = {
   ApiAuthCallbackGithubServerRoute: ApiAuthCallbackGithubServerRoute,
   ApiAuthCallbackGoogleServerRoute: ApiAuthCallbackGoogleServerRoute,
+  ApiAuthCallbackNotionServerRoute: ApiAuthCallbackNotionServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport
   ._addFileChildren(rootServerRouteChildren)

@@ -1,20 +1,20 @@
 import GithubLogo from "@/components/icons/github";
-import type { getUserFn } from "@/utils/server-functions";
+import type { getSessionFn } from "@/utils/server-functions";
 import { request } from "@octokit/request";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import { LucideStar } from "lucide-react";
 
 export default async function githubSearch(
-  user: NonNullable<Awaited<ReturnType<typeof getUserFn>>>,
+  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>,
   query: string,
   signal: AbortSignal,
 ) {
   const { data } = await request("GET /search/repositories", {
-    q: `${query} user:${user.githubUsername} is:private`,
+    q: `${query} user:${session.githubUsername} is:private`,
     per_page: 10,
     headers: {
-      Authorization: `Bearer ${user.githubAccessToken}`,
+      Authorization: `Bearer ${session.githubAccessToken}`,
     },
     signal,
   });

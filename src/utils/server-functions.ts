@@ -2,29 +2,25 @@ import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 import { generateCodeVerifier, generateState } from "arctic";
-import { getSession, github, google } from "./auth";
+import { getSession, github, google, notion } from "./auth";
 import db from "./db";
 
-export const getUserFn = createServerFn().handler(async () => {
+export const getSessionFn = createServerFn().handler(async () => {
   const sessionId = getCookie("session")?.split(".")[0];
 
   if (!sessionId) {
     return null;
   }
 
-  const session = await getSession(sessionId);
+  const response = await getSession(sessionId);
 
-  if (!session) {
+  if (!response) {
     return null;
   }
 
-  const user = await db.user.findUnique({
-    where: {
-      id: session.userId,
-    },
-  });
+  const { secretHash, ...session } = response;
 
-  return user;
+  return session;
 });
 
 export const githubLoginFn = createServerFn().handler(async () => {
@@ -123,6 +119,24 @@ export const gmailLoginFn = createServerFn().handler(async () => {
   });
 });
 
+export const notionLoginFn = createServerFn().handler(async () => {
+  const state = generateState();
+  const url = notion.createAuthorizationURL(state);
+
+  setCookie("notion_oauth_state", state, {
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 60 * 10,
+    sameSite: "lax",
+  });
+
+  throw redirect({
+    statusCode: 302,
+    href: url.toString(),
+  });
+});
+
 export const getGoogleDriveAccessTokenFn = createServerFn().handler(
   async () => {
     const sessionId = getCookie("session")?.split(".")[0];
@@ -131,29 +145,24 @@ export const getGoogleDriveAccessTokenFn = createServerFn().handler(
     const session = await getSession(sessionId);
     if (!session) return null;
 
-    const user = await db.user.findUnique({
-      where: { id: session.userId },
-    });
-    if (!user || !user.googleDrive) return null;
-
     const now = Date.now();
     const skewMs = 60_000; // 60s clock skew buffer
 
     if (
-      user.googleDriveAccessToken &&
-      user.googleDriveAccessTokenExpiresAt &&
-      user.googleDriveAccessTokenExpiresAt.getTime() - skewMs > now
+      session.googleDriveAccessToken &&
+      session.googleDriveAccessTokenExpiresAt &&
+      session.googleDriveAccessTokenExpiresAt.getTime() - skewMs > now
     ) {
-      return user.googleDriveAccessToken;
+      return session.googleDriveAccessToken;
     }
 
-    if (!user.googleDriveRefreshToken) {
+    if (!session.googleDriveRefreshToken) {
       return null;
     }
 
     try {
       const tokens = await google.refreshAccessToken(
-        user.googleDriveRefreshToken,
+        session.googleDriveRefreshToken,
       );
       const newAccessToken = tokens.accessToken();
       const accessTokenExpiresAt = tokens.accessTokenExpiresAt() ?? undefined;
@@ -162,7 +171,7 @@ export const getGoogleDriveAccessTokenFn = createServerFn().handler(
         ? tokens.refreshToken()
         : undefined;
       const refreshToken =
-        refreshTokenFromProvider ?? user.googleDriveRefreshToken;
+        refreshTokenFromProvider ?? session.googleDriveRefreshToken;
 
       const refreshTokenExpiresIn =
         "refresh_token_expires_in" in tokens.data &&
@@ -170,15 +179,15 @@ export const getGoogleDriveAccessTokenFn = createServerFn().handler(
           ? Number((tokens.data as any).refresh_token_expires_in)
           : undefined;
 
-      await db.user.update({
-        where: { id: user.id },
+      await db.session.update({
+        where: { id: session.id },
         data: {
           googleDriveAccessToken: newAccessToken,
           googleDriveAccessTokenExpiresAt: accessTokenExpiresAt,
           googleDriveRefreshToken: refreshToken,
           googleDriveRefreshTokenExpiresAt: refreshTokenExpiresIn
             ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
-            : (user.googleDriveRefreshTokenExpiresAt ?? undefined),
+            : (session.googleDriveRefreshTokenExpiresAt ?? undefined),
         },
       });
 
@@ -196,35 +205,30 @@ export const getGmailAccessTokenFn = createServerFn().handler(async () => {
   const session = await getSession(sessionId);
   if (!session) return null;
 
-  const user = await db.user.findUnique({
-    where: { id: session.userId },
-  });
-  if (!user || !user.gmail) return null;
-
   const now = Date.now();
   const skewMs = 60_000; // 60s clock skew buffer
 
   if (
-    user.gmailAccessToken &&
-    user.gmailAccessTokenExpiresAt &&
-    user.gmailAccessTokenExpiresAt.getTime() - skewMs > now
+    session.gmailAccessToken &&
+    session.gmailAccessTokenExpiresAt &&
+    session.gmailAccessTokenExpiresAt.getTime() - skewMs > now
   ) {
-    return user.gmailAccessToken;
+    return session.gmailAccessToken;
   }
 
-  if (!user.gmailRefreshToken) {
+  if (!session.gmailRefreshToken) {
     return null;
   }
 
   try {
-    const tokens = await google.refreshAccessToken(user.gmailRefreshToken);
+    const tokens = await google.refreshAccessToken(session.gmailRefreshToken);
     const newAccessToken = tokens.accessToken();
     const accessTokenExpiresAt = tokens.accessTokenExpiresAt() ?? undefined;
 
     const refreshTokenFromProvider = tokens.hasRefreshToken()
       ? tokens.refreshToken()
       : undefined;
-    const refreshToken = refreshTokenFromProvider ?? user.gmailRefreshToken;
+    const refreshToken = refreshTokenFromProvider ?? session.gmailRefreshToken;
 
     const refreshTokenExpiresIn =
       "refresh_token_expires_in" in tokens.data &&
@@ -232,15 +236,15 @@ export const getGmailAccessTokenFn = createServerFn().handler(async () => {
         ? Number((tokens.data as any).refresh_token_expires_in)
         : undefined;
 
-    await db.user.update({
-      where: { id: user.id },
+    await db.session.update({
+      where: { id: session.id },
       data: {
         gmailAccessToken: newAccessToken,
         gmailAccessTokenExpiresAt: accessTokenExpiresAt,
         gmailRefreshToken: refreshToken,
         gmailRefreshTokenExpiresAt: refreshTokenExpiresIn
           ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
-          : (user.gmailRefreshTokenExpiresAt ?? undefined),
+          : (session.gmailRefreshTokenExpiresAt ?? undefined),
       },
     });
 
