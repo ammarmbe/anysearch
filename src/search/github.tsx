@@ -10,11 +10,14 @@ export default async function githubSearch(
   query: string,
   signal: AbortSignal,
 ) {
+  const accessToken = session.githubAccessToken;
+  if (!accessToken) return [];
+
   const { data } = await request("GET /search/repositories", {
     q: `${query} user:${session.githubUsername} is:private`,
     per_page: 10,
     headers: {
-      Authorization: `Bearer ${session.githubAccessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     signal,
   });

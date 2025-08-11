@@ -46,12 +46,13 @@ export const ServerRoute = createServerFileRoute(
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "Notion-Version": "2022-06-28",
         },
       },
     );
 
     const notionUser = await notionUserResponse.json();
-    const notionName = notionUser.name;
+    const notionName = notionUser?.bot?.owner?.user?.name;
 
     const sessionId = getCookie("session")?.split(".")[0];
 

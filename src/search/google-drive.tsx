@@ -115,7 +115,7 @@ function getMimeMeta(mimeType?: string): { label: string; icon: ReactNode } {
   return fallback;
 }
 
-export default async function GoogleDriveSearch(
+export default async function googleDriveSearch(
   query: string,
   signal: AbortSignal,
 ) {

@@ -1,8 +1,5 @@
 import GmailLogo from "@/components/icons/gmail";
-import {
-  getGmailAccessTokenFn,
-  type getSessionFn,
-} from "@/utils/server-functions";
+import { getGmailAccessTokenFn } from "@/utils/server-functions";
 import { Badge, Card } from "@radix-ui/themes";
 import { LucideStar } from "lucide-react";
 
@@ -101,11 +98,7 @@ type TMessagePartHeader = {
   value?: string | null;
 };
 
-export default async function GmailSearch(
-  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>,
-  query: string,
-  signal: AbortSignal,
-) {
+export default async function gmailSearch(query: string, signal: AbortSignal) {
   const accessToken = await getGmailAccessTokenFn();
   if (!accessToken) return [];
 

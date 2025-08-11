@@ -1,8 +1,9 @@
 import Logo from "@/components/icons/logo";
 import Integrations from "@/components/integrations";
 import githubSearch from "@/search/github";
-import GmailSearch from "@/search/gmail";
-import GoogleDriveSearch from "@/search/google-drive";
+import gmailSearch from "@/search/gmail";
+import googleDriveSearch from "@/search/google-drive";
+import notionSearch from "@/search/notion";
 import { INTEGRATIONS, useSession } from "@/utils/helpers";
 import type { getSessionFn } from "@/utils/server-functions";
 import { IconButton, Spinner, TextField } from "@radix-ui/themes";
@@ -32,12 +33,16 @@ async function search(
     data = data.concat(githubSearch(session, query, signal));
   }
 
+  if (selected.includes("notion")) {
+    data = data.concat(notionSearch(session, query, signal));
+  }
+
   if (selected.includes("googleDrive")) {
-    data = data.concat(GoogleDriveSearch(query, signal));
+    data = data.concat(googleDriveSearch(query, signal));
   }
 
   if (selected.includes("gmail")) {
-    data = data.concat(GmailSearch(session, query, signal));
+    data = data.concat(gmailSearch(query, signal));
   }
 
   data = await Promise.all(data);

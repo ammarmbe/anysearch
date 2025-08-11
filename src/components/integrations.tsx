@@ -3,6 +3,7 @@ import {
   githubLoginFn,
   gmailLoginFn,
   googleDriveLoginFn,
+  notionLoginFn,
 } from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
 import { useServerFn } from "@tanstack/react-start";
@@ -25,6 +26,7 @@ export default function Integrations({
   const githubLogin = useServerFn(githubLoginFn);
   const googleDriveLogin = useServerFn(googleDriveLoginFn);
   const gmailLogin = useServerFn(gmailLoginFn);
+  const notionLogin = useServerFn(notionLoginFn);
 
   const integrations = useMemo(
     () =>
@@ -43,7 +45,7 @@ export default function Integrations({
           icon: <NotionLogo className="size-[4rem]" />,
           exists: !!session?.notionUsername,
           usernameField: session?.notionUsername,
-          loginFn: () => Promise.resolve(),
+          loginFn: notionLogin,
         },
         {
           id: "gmail",
