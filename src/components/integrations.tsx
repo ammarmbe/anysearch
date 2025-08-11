@@ -1,5 +1,9 @@
 import { INTEGRATIONS, useUser } from "@/utils/helpers";
-import { githubLoginFn, googleLoginFn } from "@/utils/server-functions";
+import {
+  githubLoginFn,
+  gmailLoginFn,
+  googleDriveLoginFn,
+} from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
 import { useServerFn } from "@tanstack/react-start";
 import { LucideChevronDown } from "lucide-react";
@@ -19,18 +23,19 @@ export default function Integrations({
 }) {
   const { data: user, isLoading: isUserLoading } = useUser();
   const githubLogin = useServerFn(githubLoginFn);
-  const googleLogin = useServerFn(googleLoginFn);
+  const googleDriveLogin = useServerFn(googleDriveLoginFn);
+  const gmailLogin = useServerFn(gmailLoginFn);
 
   const integrations = useMemo(
     () =>
       [
         {
-          id: "google",
-          name: "Google",
+          id: "googleDrive",
+          name: "Google Drive",
           icon: <GoogleDriveLogo className="size-[4rem]" />,
-          exists: !!user?.googleId,
-          usernameField: user?.googleName,
-          loginFn: googleLogin,
+          exists: !!user?.googleDriveId,
+          usernameField: user?.googleDriveName,
+          loginFn: googleDriveLogin,
         },
         {
           id: "notion",
@@ -44,9 +49,9 @@ export default function Integrations({
           id: "gmail",
           name: "Gmail",
           icon: <GmailLogo className="size-[4rem]" />,
-          exists: !!user?.googleId,
-          usernameField: user?.googleName,
-          loginFn: googleLogin,
+          exists: !!user?.gmailId,
+          usernameField: user?.gmailName,
+          loginFn: gmailLogin,
         },
         {
           id: "github",
@@ -59,7 +64,7 @@ export default function Integrations({
           loginFn: githubLogin,
         },
       ] as const,
-    [user, githubLogin, googleLogin],
+    [user, githubLogin, googleDriveLogin],
   );
 
   return (
@@ -101,7 +106,7 @@ export default function Integrations({
                   key={index}
                   className="flex flex-col items-center justify-start gap-3 px-3 text-center [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
                 >
-                  <div className="flex flex-col items-center justify-center gap-3 px-[2.25rem]">
+                  <div className="flex flex-col items-center justify-center gap-3">
                     <div className="flex items-center justify-center">
                       {integration.icon}
                     </div>

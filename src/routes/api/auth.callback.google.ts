@@ -18,6 +18,8 @@ export const ServerRoute = createServerFileRoute(
     const storedState = getCookie("google_oauth_state") ?? null;
     const codeVerifier = getCookie("google_code_verifier") ?? null;
 
+    const target = getCookie("google_integration") ?? "drive";
+
     if (
       code === null ||
       state === null ||
@@ -46,6 +48,14 @@ export const ServerRoute = createServerFileRoute(
     }
 
     const accessToken = tokens.accessToken();
+    const accessTokenExpiresAt = tokens.accessTokenExpiresAt();
+    const hasRefresh = tokens.hasRefreshToken();
+    const refreshToken = hasRefresh ? tokens.refreshToken() : undefined;
+    const refreshTokenExpiresIn =
+      "refresh_token_expires_in" in tokens.data &&
+      typeof (tokens.data as any).refresh_token_expires_in === "number"
+        ? Number((tokens.data as any).refresh_token_expires_in)
+        : undefined;
 
     const claims = decodeIdToken(tokens.idToken()) as {
       sub: string;
@@ -71,10 +81,19 @@ export const ServerRoute = createServerFileRoute(
           id: existingUser.id,
         },
         data: {
-          google: true,
-          googleId: googleUserId,
-          googleName: googleName,
-          googleAccessToken: accessToken,
+          [`${target === "drive" ? "googleDrive" : "gmail"}`]: true,
+          [`${target === "drive" ? "googleDrive" : "gmail"}Id`]: googleUserId,
+          [`${target === "drive" ? "googleDrive" : "gmail"}Name`]: googleName,
+          [`${target === "drive" ? "googleDrive" : "gmail"}AccessToken`]:
+            accessToken,
+          [`${target === "drive" ? "googleDrive" : "gmail"}AccessTokenExpiresAt`]:
+            accessTokenExpiresAt ?? undefined,
+          [`${target === "drive" ? "googleDrive" : "gmail"}RefreshToken`]:
+            refreshToken ?? undefined,
+          [`${target === "drive" ? "googleDrive" : "gmail"}RefreshTokenExpiresAt`]:
+            refreshTokenExpiresIn
+              ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
+              : undefined,
         },
       });
 
@@ -95,10 +114,19 @@ export const ServerRoute = createServerFileRoute(
     const user = await db.user.create({
       data: {
         email: googleEmail,
-        google: true,
-        googleId: googleUserId,
-        googleName: googleName,
-        googleAccessToken: accessToken,
+        [`${target === "drive" ? "googleDrive" : "gmail"}`]: true,
+        [`${target === "drive" ? "googleDrive" : "gmail"}Id`]: googleUserId,
+        [`${target === "drive" ? "googleDrive" : "gmail"}Name`]: googleName,
+        [`${target === "drive" ? "googleDrive" : "gmail"}AccessToken`]:
+          accessToken,
+        [`${target === "drive" ? "googleDrive" : "gmail"}AccessTokenExpiresAt`]:
+          accessTokenExpiresAt ?? undefined,
+        [`${target === "drive" ? "googleDrive" : "gmail"}RefreshToken`]:
+          refreshToken ?? undefined,
+        [`${target === "drive" ? "googleDrive" : "gmail"}RefreshTokenExpiresAt`]:
+          refreshTokenExpiresIn
+            ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
+            : undefined,
       },
     });
 

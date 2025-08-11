@@ -32,8 +32,8 @@ async function search(
     data = data.concat(githubSearch(user, query, signal));
   }
 
-  if (selected.includes("google")) {
-    data = data.concat(GoogleDriveSearch(user, query, signal));
+  if (selected.includes("googleDrive")) {
+    data = data.concat(GoogleDriveSearch(query, signal));
   }
 
   if (selected.includes("gmail")) {
@@ -107,7 +107,7 @@ function Home() {
         >
           <TextField.Slot className="ml-0 lg:px-[0.8125rem]">
             {isLoading || (isFetching && isPlaceholderData) ? (
-              <Spinner className="size-[1rem] lg:size-[1.25rem]" />
+              <Spinner className="size-[0.9375rem] lg:size-[1.25rem]" />
             ) : (
               <LucideSearch className="size-[1rem] lg:size-[1.25rem]" />
             )}

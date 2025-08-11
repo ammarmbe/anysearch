@@ -18,17 +18,26 @@ model User {
   githubUsername    String?
   githubAccessToken String?
 
-  google            Boolean @default(false)
-  googleId          String?
-  googleName        String?
-  googleAccessToken String?
+  googleDrive                      Boolean   @default(false)
+  googleDriveId                    String?
+  googleDriveName                  String?
+  googleDriveAccessToken           String?
+  googleDriveAccessTokenExpiresAt  DateTime?
+  googleDriveRefreshToken          String?
+  googleDriveRefreshTokenExpiresAt DateTime?
+
+  gmail                      Boolean   @default(false)
+  gmailId                    String?
+  gmailName                  String?
+  gmailAccessToken           String?
+  gmailAccessTokenExpiresAt  DateTime?
+  gmailRefreshToken          String?
+  gmailRefreshTokenExpiresAt DateTime?
 
   notion            Boolean @default(false)
   notionId          String?
   notionName        String?
   notionAccessToken String?
-
-  gmail Boolean @default(false)
 
   sessions Session[]
 

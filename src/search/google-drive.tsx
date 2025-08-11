@@ -1,5 +1,5 @@
 import GoogleDriveLogo from "@/components/icons/google-drive";
-import type { getUserFn } from "@/utils/server-functions";
+import { getGoogleDriveAccessTokenFn } from "@/utils/server-functions";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import {
@@ -116,10 +116,12 @@ function getMimeMeta(mimeType?: string): { label: string; icon: ReactNode } {
 }
 
 export default async function GoogleDriveSearch(
-  user: NonNullable<Awaited<ReturnType<typeof getUserFn>>>,
   query: string,
   signal: AbortSignal,
 ) {
+  const accessToken = await getGoogleDriveAccessTokenFn();
+  if (!accessToken) return [];
+
   const response = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
       `name contains '${query}' and trashed = false`,
@@ -128,7 +130,7 @@ export default async function GoogleDriveSearch(
     )}`,
     {
       headers: {
-        Authorization: `Bearer ${user.googleAccessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       signal,
     },

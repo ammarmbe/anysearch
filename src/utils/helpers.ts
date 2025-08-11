@@ -14,4 +14,9 @@ export function useUser() {
   });
 }
 
-export const INTEGRATIONS = ["google", "notion", "gmail", "github"] as const;
+export const INTEGRATIONS = [
+  "googleDrive",
+  "notion",
+  "gmail",
+  "github",
+] as const;
