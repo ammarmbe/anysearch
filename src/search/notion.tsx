@@ -4,12 +4,16 @@ import { TSession } from "@/utils/helpers";
 import { Badge, Card } from "@radix-ui/themes";
 import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getCookie, setCookie } from "@tanstack/react-start/server";
+import { setCookie } from "@tanstack/react-start/server";
 import { generateObject } from "ai";
 import { generateState } from "arctic";
 import z from "zod";
-import { getSession, notion } from "../utils/auth";
-import db from "../utils/db";
+import { notion } from "../utils/auth";
+import {
+  ensureServerSession,
+  getServerSession,
+  setServerSession,
+} from "../utils/server-session";
 
 type NotionRichText = { plain_text?: string };
 
@@ -173,20 +177,12 @@ export const notionLoginFn = createServerFn().handler(async () => {
 });
 
 export const unlinkNotionFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return false;
-
-  const session = await getSession(sessionId);
-  if (!session) return false;
-
-  await db.session.update({
-    where: { id: session.id },
-    data: {
-      notionUsername: null,
-      notionAccessToken: null,
-    },
+  const session = getServerSession() ?? ensureServerSession();
+  setServerSession({
+    ...session,
+    notionUsername: null,
+    notionAccessToken: null,
   });
-
   return true;
 });
 

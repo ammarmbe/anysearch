@@ -3,13 +3,17 @@ import { model } from "@/utils/ai";
 import { Badge, Card } from "@radix-ui/themes";
 import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getCookie, setCookie } from "@tanstack/react-start/server";
+import { setCookie } from "@tanstack/react-start/server";
 import { generateObject } from "ai";
 import { generateCodeVerifier, generateState } from "arctic";
 import { LucideStar } from "lucide-react";
 import { z } from "zod";
-import { getSession, google } from "../utils/auth";
-import db from "../utils/db";
+import { google } from "../utils/auth";
+import {
+  ensureServerSession,
+  getServerSession,
+  setServerSession,
+} from "../utils/server-session";
 
 type TMessage = {
   /**
@@ -223,19 +227,14 @@ export const gmailLoginFn = createServerFn().handler(async () => {
 });
 
 export const getGmailAccessTokenFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return null;
-
-  const session = await getSession(sessionId);
-  if (!session) return null;
-
+  const session = getServerSession() ?? ensureServerSession();
   const now = Date.now();
-  const skewMs = 60_000; // 60s clock skew buffer
+  const skewMs = 60_000;
 
   if (
     session.gmailAccessToken &&
     session.gmailAccessTokenExpiresAt &&
-    session.gmailAccessTokenExpiresAt.getTime() - skewMs > now
+    new Date(session.gmailAccessTokenExpiresAt).getTime() - skewMs > now
   ) {
     return session.gmailAccessToken;
   }
@@ -260,16 +259,16 @@ export const getGmailAccessTokenFn = createServerFn().handler(async () => {
         ? Number((tokens.data as any).refresh_token_expires_in)
         : undefined;
 
-    await db.session.update({
-      where: { id: session.id },
-      data: {
-        gmailAccessToken: newAccessToken,
-        gmailAccessTokenExpiresAt: accessTokenExpiresAt,
-        gmailRefreshToken: refreshToken,
-        gmailRefreshTokenExpiresAt: refreshTokenExpiresIn
-          ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
-          : (session.gmailRefreshTokenExpiresAt ?? undefined),
-      },
+    setServerSession({
+      ...session,
+      gmailAccessToken: newAccessToken,
+      gmailAccessTokenExpiresAt: accessTokenExpiresAt
+        ? accessTokenExpiresAt.toISOString()
+        : session.gmailAccessTokenExpiresAt,
+      gmailRefreshToken: refreshToken,
+      gmailRefreshTokenExpiresAt: refreshTokenExpiresIn
+        ? new Date(Date.now() + refreshTokenExpiresIn * 1000).toISOString()
+        : session.gmailRefreshTokenExpiresAt,
     });
 
     return newAccessToken;
@@ -279,23 +278,15 @@ export const getGmailAccessTokenFn = createServerFn().handler(async () => {
 });
 
 export const unlinkGmailFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return false;
-
-  const session = await getSession(sessionId);
-  if (!session) return false;
-
-  await db.session.update({
-    where: { id: session.id },
-    data: {
-      gmailUsername: null,
-      gmailAccessToken: null,
-      gmailAccessTokenExpiresAt: null,
-      gmailRefreshToken: null,
-      gmailRefreshTokenExpiresAt: null,
-    },
+  const session = getServerSession() ?? ensureServerSession();
+  setServerSession({
+    ...session,
+    gmailUsername: null,
+    gmailAccessToken: null,
+    gmailAccessTokenExpiresAt: null,
+    gmailRefreshToken: null,
+    gmailRefreshTokenExpiresAt: null,
   });
-
   return true;
 });
 

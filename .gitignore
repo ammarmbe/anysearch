@@ -38,7 +38,3 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .vercel
 .output
 .nitro
-
-# Prisma
-src/generated
-/src/generated/prisma

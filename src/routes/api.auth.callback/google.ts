@@ -1,11 +1,7 @@
-import { createSession, getSession, google } from "@/utils/auth";
-import db from "@/utils/db";
+import { google } from "@/utils/auth";
+import { ensureServerSession, setServerSession } from "@/utils/server-session";
 import { redirect } from "@tanstack/react-router";
-import {
-  createServerFileRoute,
-  getCookie,
-  setCookie,
-} from "@tanstack/react-start/server";
+import { createServerFileRoute, getCookie } from "@tanstack/react-start/server";
 import { decodeIdToken, OAuth2Tokens } from "arctic";
 
 export const ServerRoute = createServerFileRoute(
@@ -59,72 +55,29 @@ export const ServerRoute = createServerFileRoute(
 
     const googleName = claims["name"];
 
-    const sessionId = getCookie("session")?.split(".")[0];
-
-    let existingSession = null;
-
-    if (sessionId) {
-      existingSession = await getSession(sessionId);
+    const session = ensureServerSession();
+    const now = new Date();
+    const updated: any = {
+      ...session,
+      lastVerifiedAt: now.toISOString(),
+    };
+    const prefix = target === "drive" ? "googleDrive" : "gmail";
+    updated[`${prefix}Username`] =
+      googleName ?? session[`${prefix}Username` as const];
+    updated[`${prefix}AccessToken`] =
+      accessToken ?? session[`${prefix}AccessToken` as const];
+    updated[`${prefix}AccessTokenExpiresAt`] = accessTokenExpiresAt
+      ? accessTokenExpiresAt.toISOString()
+      : session[`${prefix}AccessTokenExpiresAt` as const];
+    if (refreshToken) {
+      updated[`${prefix}RefreshToken`] = refreshToken;
     }
-
-    if (existingSession !== null) {
-      await db.session.update({
-        where: { id: existingSession.id },
-        data: {
-          [`${target === "drive" ? "googleDrive" : "gmail"}Username`]:
-            googleName,
-          [`${target === "drive" ? "googleDrive" : "gmail"}AccessToken`]:
-            accessToken,
-          [`${target === "drive" ? "googleDrive" : "gmail"}AccessTokenExpiresAt`]:
-            accessTokenExpiresAt ?? undefined,
-          [`${target === "drive" ? "googleDrive" : "gmail"}RefreshToken`]:
-            refreshToken ?? undefined,
-          [`${target === "drive" ? "googleDrive" : "gmail"}RefreshTokenExpiresAt`]:
-            refreshTokenExpiresIn
-              ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
-              : undefined,
-        },
-      });
-
-      setCookie(
-        "session",
-        existingSession.id + "." + existingSession.secretHash,
-        {
-          path: "/",
-          secure: process.env.NODE_ENV === "production",
-          httpOnly: true,
-          maxAge: 60 * 60 * 24 * 30,
-          sameSite: "lax",
-        },
-      );
-
-      throw redirect({
-        statusCode: 302,
-        to: "/",
-      });
+    if (refreshTokenExpiresIn) {
+      updated[`${prefix}RefreshTokenExpiresAt`] = new Date(
+        Date.now() + refreshTokenExpiresIn * 1000,
+      ).toISOString();
     }
-
-    const session = await createSession({
-      [`${target === "drive" ? "googleDrive" : "gmail"}Username`]: googleName,
-      [`${target === "drive" ? "googleDrive" : "gmail"}AccessToken`]:
-        accessToken,
-      [`${target === "drive" ? "googleDrive" : "gmail"}AccessTokenExpiresAt`]:
-        accessTokenExpiresAt ?? undefined,
-      [`${target === "drive" ? "googleDrive" : "gmail"}RefreshToken`]:
-        refreshToken ?? undefined,
-      [`${target === "drive" ? "googleDrive" : "gmail"}RefreshTokenExpiresAt`]:
-        refreshTokenExpiresIn
-          ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
-          : undefined,
-    });
-
-    setCookie("session", session.token, {
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30,
-      sameSite: "lax",
-    });
+    setServerSession(updated);
 
     throw redirect({
       statusCode: 302,

@@ -1,11 +1,7 @@
-import { createSession, getSession, notion } from "@/utils/auth";
-import db from "@/utils/db";
+import { notion } from "@/utils/auth";
+import { ensureServerSession, setServerSession } from "@/utils/server-session";
 import { redirect } from "@tanstack/react-router";
-import {
-  createServerFileRoute,
-  getCookie,
-  setCookie,
-} from "@tanstack/react-start/server";
+import { createServerFileRoute, getCookie } from "@tanstack/react-start/server";
 import { OAuth2Tokens } from "arctic";
 
 export const ServerRoute = createServerFileRoute(
@@ -48,53 +44,15 @@ export const ServerRoute = createServerFileRoute(
     const notionUser = await notionUserResponse.json();
     const notionName = notionUser?.bot?.owner?.user?.name;
 
-    const sessionId = getCookie("session")?.split(".")[0];
-
-    let existingSession = null;
-
-    if (sessionId) {
-      existingSession = await getSession(sessionId);
-    }
-
-    if (existingSession !== null) {
-      await db.session.update({
-        where: { id: existingSession.id },
-        data: {
-          notionUsername: notionName,
-          notionAccessToken: accessToken,
-        },
-      });
-
-      setCookie(
-        "session",
-        existingSession.id + "." + existingSession.secretHash,
-        {
-          path: "/",
-          secure: process.env.NODE_ENV === "production",
-          httpOnly: true,
-          maxAge: 60 * 60 * 24 * 30,
-          sameSite: "lax",
-        },
-      );
-
-      throw redirect({
-        statusCode: 302,
-        to: "/",
-      });
-    }
-
-    const session = await createSession({
-      notionUsername: notionName,
-      notionAccessToken: accessToken,
-    });
-
-    setCookie("session", session.token, {
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30,
-      sameSite: "lax",
-    });
+    const session = ensureServerSession();
+    const now = new Date();
+    const updated = {
+      ...session,
+      lastVerifiedAt: now.toISOString(),
+      notionUsername: notionName ?? session.notionUsername,
+      notionAccessToken: accessToken ?? session.notionAccessToken,
+    };
+    setServerSession(updated);
 
     throw redirect({
       statusCode: 302,

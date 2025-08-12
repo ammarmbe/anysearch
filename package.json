@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "postinstall": "prisma generate"
+    "build": "vite build"
   },
   "prettier": {
     "plugins": [
@@ -22,14 +21,12 @@
     "prettier": "^3.6.2",
     "prettier-plugin-organize-imports": "^4.2.0",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "prisma": "^6.13.0",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.4",
     "@notionhq/client": "^4.0.1",
     "@octokit/request": "^10.0.3",
-    "@prisma/client": "^6.13.0",
     "@radix-ui/themes": "^3.2.1",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "^5.84.2",

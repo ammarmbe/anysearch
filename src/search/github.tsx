@@ -5,13 +5,17 @@ import { request } from "@octokit/request";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getCookie, setCookie } from "@tanstack/react-start/server";
+import { setCookie } from "@tanstack/react-start/server";
 import { generateObject } from "ai";
 import { generateState } from "arctic";
 import { LucideStar } from "lucide-react";
 import z from "zod";
-import { getSession, github } from "../utils/auth";
-import db from "../utils/db";
+import { github } from "../utils/auth";
+import {
+  ensureServerSession,
+  getServerSession,
+  setServerSession,
+} from "../utils/server-session";
 
 const PROMPT = `
 You are a helpful assistant. Your task is to generate parameters for a GitHub API request. The request will be to the \`search/repositories\` endpoint, and it will be used to search for repositories on GitHub.
@@ -295,20 +299,12 @@ export const githubLoginFn = createServerFn().handler(async () => {
 });
 
 export const unlinkGithubFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return false;
-
-  const session = await getSession(sessionId);
-  if (!session) return false;
-
-  await db.session.update({
-    where: { id: session.id },
-    data: {
-      githubUsername: null,
-      githubAccessToken: null,
-    },
+  const session = getServerSession() ?? ensureServerSession();
+  setServerSession({
+    ...session,
+    githubUsername: null,
+    githubAccessToken: null,
   });
-
   return true;
 });
 

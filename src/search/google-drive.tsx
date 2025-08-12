@@ -3,7 +3,7 @@ import { model } from "@/utils/ai";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getCookie, setCookie } from "@tanstack/react-start/server";
+import { setCookie } from "@tanstack/react-start/server";
 import { generateObject } from "ai";
 import { generateCodeVerifier, generateState } from "arctic";
 import {
@@ -20,8 +20,12 @@ import {
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { z } from "zod";
-import { getSession, google } from "../utils/auth";
-import db from "../utils/db";
+import { google } from "../utils/auth";
+import {
+  ensureServerSession,
+  getServerSession,
+  setServerSession,
+} from "../utils/server-session";
 
 function formatFileSize(byteString?: string) {
   if (!byteString) return undefined;
@@ -287,19 +291,14 @@ export const googleDriveLoginFn = createServerFn().handler(async () => {
 
 export const getGoogleDriveAccessTokenFn = createServerFn().handler(
   async () => {
-    const sessionId = getCookie("session")?.split(".")[0];
-    if (!sessionId) return null;
-
-    const session = await getSession(sessionId);
-    if (!session) return null;
-
+    const session = getServerSession() ?? ensureServerSession();
     const now = Date.now();
-    const skewMs = 60_000; // 60s clock skew buffer
+    const skewMs = 60_000;
 
     if (
       session.googleDriveAccessToken &&
       session.googleDriveAccessTokenExpiresAt &&
-      session.googleDriveAccessTokenExpiresAt.getTime() - skewMs > now
+      new Date(session.googleDriveAccessTokenExpiresAt).getTime() - skewMs > now
     ) {
       return session.googleDriveAccessToken;
     }
@@ -327,16 +326,16 @@ export const getGoogleDriveAccessTokenFn = createServerFn().handler(
           ? Number((tokens.data as any).refresh_token_expires_in)
           : undefined;
 
-      await db.session.update({
-        where: { id: session.id },
-        data: {
-          googleDriveAccessToken: newAccessToken,
-          googleDriveAccessTokenExpiresAt: accessTokenExpiresAt,
-          googleDriveRefreshToken: refreshToken,
-          googleDriveRefreshTokenExpiresAt: refreshTokenExpiresIn
-            ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
-            : (session.googleDriveRefreshTokenExpiresAt ?? undefined),
-        },
+      setServerSession({
+        ...session,
+        googleDriveAccessToken: newAccessToken,
+        googleDriveAccessTokenExpiresAt: accessTokenExpiresAt
+          ? accessTokenExpiresAt.toISOString()
+          : session.googleDriveAccessTokenExpiresAt,
+        googleDriveRefreshToken: refreshToken,
+        googleDriveRefreshTokenExpiresAt: refreshTokenExpiresIn
+          ? new Date(Date.now() + refreshTokenExpiresIn * 1000).toISOString()
+          : session.googleDriveRefreshTokenExpiresAt,
       });
 
       return newAccessToken;
@@ -347,23 +346,15 @@ export const getGoogleDriveAccessTokenFn = createServerFn().handler(
 );
 
 export const unlinkGoogleDriveFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return false;
-
-  const session = await getSession(sessionId);
-  if (!session) return false;
-
-  await db.session.update({
-    where: { id: session.id },
-    data: {
-      googleDriveUsername: null,
-      googleDriveAccessToken: null,
-      googleDriveAccessTokenExpiresAt: null,
-      googleDriveRefreshToken: null,
-      googleDriveRefreshTokenExpiresAt: null,
-    },
+  const session = getServerSession() ?? ensureServerSession();
+  setServerSession({
+    ...session,
+    googleDriveUsername: null,
+    googleDriveAccessToken: null,
+    googleDriveAccessTokenExpiresAt: null,
+    googleDriveRefreshToken: null,
+    googleDriveRefreshTokenExpiresAt: null,
   });
-
   return true;
 });
 
