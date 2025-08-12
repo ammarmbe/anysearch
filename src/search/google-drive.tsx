@@ -346,6 +346,27 @@ export const getGoogleDriveAccessTokenFn = createServerFn().handler(
   },
 );
 
+export const unlinkGoogleDriveFn = createServerFn().handler(async () => {
+  const sessionId = getCookie("session")?.split(".")[0];
+  if (!sessionId) return false;
+
+  const session = await getSession(sessionId);
+  if (!session) return false;
+
+  await db.session.update({
+    where: { id: session.id },
+    data: {
+      googleDriveUsername: null,
+      googleDriveAccessToken: null,
+      googleDriveAccessTokenExpiresAt: null,
+      googleDriveRefreshToken: null,
+      googleDriveRefreshTokenExpiresAt: null,
+    },
+  });
+
+  return true;
+});
+
 export async function googleDriveSearch({
   query,
   signal,
@@ -361,13 +382,9 @@ export async function googleDriveSearch({
   let queryParameters: z.output<typeof SCHEMA> | undefined = undefined;
 
   if (aiEnhanced) {
-    console.log("aiEnhanced");
-
     const object = await generateAiEnhancedQueryParametersFn({
       data: { query },
     });
-
-    console.log(object);
 
     queryParameters = object;
   } else {

@@ -4,7 +4,7 @@ import GoogleDriveLogo from "@/components/icons/google-drive";
 import Logo from "@/components/icons/logo";
 import NotionLogo from "@/components/icons/notion";
 import Integrations from "@/components/integrations";
-import githubSearch from "@/search/github";
+import { githubSearch } from "@/search/github";
 import gmailSearch from "@/search/gmail";
 import { googleDriveSearch } from "@/search/google-drive";
 import notionSearch from "@/search/notion";

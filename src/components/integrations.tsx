@@ -1,12 +1,10 @@
-import { googleDriveLoginFn } from "@/search/google-drive";
+import { githubLoginFn, unlinkGithubFn } from "@/search/github";
+import { googleDriveLoginFn, unlinkGoogleDriveFn } from "@/search/google-drive";
 import { cn, INTEGRATIONS, useSession } from "@/utils/helpers";
 import {
-  githubLoginFn,
   gmailLoginFn,
   notionLoginFn,
-  unlinkGithubFn,
   unlinkGmailFn,
-  unlinkGoogleDriveFn,
   unlinkNotionFn,
 } from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
@@ -128,10 +126,12 @@ export default function Integrations({
           >
             {integrations.map((integration, index) =>
               integration.exists ? (
-                <div className="rounded-3 border-grayA-5 flex flex-col border">
+                <div
+                  className="rounded-3 border-grayA-5 flex flex-col border"
+                  key={index}
+                >
                   <CheckboxCards.Item
                     value={integration.id}
-                    key={index}
                     className="bg-background -m-px flex grow flex-col items-center justify-start gap-3 px-3 text-center [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
                   >
                     <div className="flex flex-col items-center justify-center gap-3">

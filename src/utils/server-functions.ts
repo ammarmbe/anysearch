@@ -2,7 +2,7 @@ import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 import { generateCodeVerifier, generateState } from "arctic";
-import { getSession, github, google, notion } from "./auth";
+import { getSession, google, notion } from "./auth";
 import db from "./db";
 
 export const getSessionFn = createServerFn().handler(async () => {
@@ -21,24 +21,6 @@ export const getSessionFn = createServerFn().handler(async () => {
   const { secretHash, ...session } = response;
 
   return session;
-});
-
-export const githubLoginFn = createServerFn().handler(async () => {
-  const state = generateState();
-  const url = github.createAuthorizationURL(state, ["repo"]);
-
-  setCookie("github_oauth_state", state, {
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    maxAge: 60 * 10,
-    sameSite: "lax",
-  });
-
-  throw redirect({
-    statusCode: 302,
-    href: url.toString(),
-  });
 });
 
 export const gmailLoginFn = createServerFn().handler(async () => {
@@ -154,25 +136,6 @@ export const getGmailAccessTokenFn = createServerFn().handler(async () => {
   }
 });
 
-// Added unlink functions for integrations
-export const unlinkGithubFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return false;
-
-  const session = await getSession(sessionId);
-  if (!session) return false;
-
-  await db.session.update({
-    where: { id: session.id },
-    data: {
-      githubUsername: null,
-      githubAccessToken: null,
-    },
-  });
-
-  return true;
-});
-
 export const unlinkNotionFn = createServerFn().handler(async () => {
   const sessionId = getCookie("session")?.split(".")[0];
   if (!sessionId) return false;
@@ -185,27 +148,6 @@ export const unlinkNotionFn = createServerFn().handler(async () => {
     data: {
       notionUsername: null,
       notionAccessToken: null,
-    },
-  });
-
-  return true;
-});
-
-export const unlinkGoogleDriveFn = createServerFn().handler(async () => {
-  const sessionId = getCookie("session")?.split(".")[0];
-  if (!sessionId) return false;
-
-  const session = await getSession(sessionId);
-  if (!session) return false;
-
-  await db.session.update({
-    where: { id: session.id },
-    data: {
-      googleDriveUsername: null,
-      googleDriveAccessToken: null,
-      googleDriveAccessTokenExpiresAt: null,
-      googleDriveRefreshToken: null,
-      googleDriveRefreshTokenExpiresAt: null,
     },
   });
 
