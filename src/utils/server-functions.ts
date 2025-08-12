@@ -253,3 +253,82 @@ export const getGmailAccessTokenFn = createServerFn().handler(async () => {
     return null;
   }
 });
+
+// Added unlink functions for integrations
+export const unlinkGithubFn = createServerFn().handler(async () => {
+  const sessionId = getCookie("session")?.split(".")[0];
+  if (!sessionId) return false;
+
+  const session = await getSession(sessionId);
+  if (!session) return false;
+
+  await db.session.update({
+    where: { id: session.id },
+    data: {
+      githubUsername: null,
+      githubAccessToken: null,
+    },
+  });
+
+  return true;
+});
+
+export const unlinkNotionFn = createServerFn().handler(async () => {
+  const sessionId = getCookie("session")?.split(".")[0];
+  if (!sessionId) return false;
+
+  const session = await getSession(sessionId);
+  if (!session) return false;
+
+  await db.session.update({
+    where: { id: session.id },
+    data: {
+      notionUsername: null,
+      notionAccessToken: null,
+    },
+  });
+
+  return true;
+});
+
+export const unlinkGoogleDriveFn = createServerFn().handler(async () => {
+  const sessionId = getCookie("session")?.split(".")[0];
+  if (!sessionId) return false;
+
+  const session = await getSession(sessionId);
+  if (!session) return false;
+
+  await db.session.update({
+    where: { id: session.id },
+    data: {
+      googleDriveUsername: null,
+      googleDriveAccessToken: null,
+      googleDriveAccessTokenExpiresAt: null,
+      googleDriveRefreshToken: null,
+      googleDriveRefreshTokenExpiresAt: null,
+    },
+  });
+
+  return true;
+});
+
+export const unlinkGmailFn = createServerFn().handler(async () => {
+  const sessionId = getCookie("session")?.split(".")[0];
+  if (!sessionId) return false;
+
+  const session = await getSession(sessionId);
+  if (!session) return false;
+
+  await db.session.update({
+    where: { id: session.id },
+    data: {
+      gmailUsername: null,
+      gmailAccessToken: null,
+      gmailAccessTokenExpiresAt: null,
+      gmailRefreshToken: null,
+      gmailRefreshTokenExpiresAt: null,
+    },
+  });
+
+  return true;
+});

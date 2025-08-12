@@ -17,7 +17,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { LucideSearch, LucideX } from "lucide-react";
+import { LucideSearch, LucideSparkles, LucideX } from "lucide-react";
 import { Fragment, JSX, useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -148,23 +148,34 @@ function Home() {
             )}
           </TextField.Slot>
           {query ? (
-            <TextField.Slot>
-              <IconButton
-                size="3"
-                variant="ghost"
-                color="gray"
-                className="rounded-1 lg:size-5"
-                onClick={() => {
-                  setQuery("");
-                  if (inputRef.current) {
-                    inputRef.current.value = "";
-                    inputRef.current.focus();
-                  }
-                }}
-              >
-                <LucideX className="size-[1rem] lg:size-[1.25rem]" />
-              </IconButton>
-            </TextField.Slot>
+            <>
+              <TextField.Slot className="-mr-1 aspect-square h-full items-center justify-center px-0">
+                <IconButton
+                  size="3"
+                  variant="ghost"
+                  color="gray"
+                  className="rounded-1 lg:size-5"
+                  onClick={() => {
+                    setQuery("");
+                    if (inputRef.current) {
+                      inputRef.current.value = "";
+                      inputRef.current.focus();
+                    }
+                  }}
+                >
+                  <LucideX className="size-[1rem] lg:size-[1.25rem]" />
+                </IconButton>
+              </TextField.Slot>
+              <TextField.Slot className="mr-0 aspect-square h-full items-center justify-center px-0">
+                <IconButton
+                  size="3"
+                  variant="ghost"
+                  className="rounded-1 lg:size-5"
+                >
+                  <LucideSparkles className="size-[1rem] lg:size-[1.25rem]" />
+                </IconButton>
+              </TextField.Slot>
+            </>
           ) : null}
         </TextField.Root>
       </div>
