@@ -2,6 +2,9 @@
 
 AnySearch lets you search across Notion, GitHub, Google Drive, and Gmail from one place. Deployed at: [anysearch.ambe.dev](https://anysearch.ambe.dev)
 
+<img width="1280" height="640" alt="AnySearch" src="https://github.com/user-attachments/assets/6de4396f-51c1-469c-81b1-1fd60d75dee1" />
+
+
 ## Features
 
 - **Unified search across multiple platforms**: instantly fetch and display search results from Notion pages, GitHub repositories, Google Drive files, and Gmail.
