@@ -18,15 +18,11 @@ export const ServerRoute = createServerFileRoute(
     const storedState = getCookie("github_oauth_state") ?? null;
 
     if (code === null || state === null || storedState === null) {
-      return new Response(null, {
-        status: 400,
-      });
+      throw new Error("Invalid code or state");
     }
 
     if (state !== storedState) {
-      return new Response(null, {
-        status: 400,
-      });
+      throw new Error("Invalid state");
     }
 
     let tokens: OAuth2Tokens;
@@ -34,9 +30,7 @@ export const ServerRoute = createServerFileRoute(
     try {
       tokens = await github.validateAuthorizationCode(code);
     } catch (e) {
-      return new Response(null, {
-        status: 400,
-      });
+      throw new Error("Invalid code");
     }
 
     const accessToken = tokens.accessToken();

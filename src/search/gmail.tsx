@@ -2,6 +2,7 @@ import GmailLogo from "@/components/icons/gmail";
 import { getGmailAccessTokenFn } from "@/utils/server-functions";
 import { Badge, Card } from "@radix-ui/themes";
 import { LucideStar } from "lucide-react";
+import { JSX } from "react";
 
 type TMessage = {
   /**
@@ -98,107 +99,130 @@ type TMessagePartHeader = {
   value?: string | null;
 };
 
-export default async function gmailSearch(query: string, signal: AbortSignal) {
+export default async function gmailSearch(
+  query: string,
+  signal: AbortSignal,
+): Promise<
+  { data: JSX.Element[]; error: null } | { data: null; error: Error }
+> {
   const accessToken = await getGmailAccessTokenFn();
-  if (!accessToken) return [];
+  if (!accessToken) return { data: null, error: new Error("No access token") };
 
-  const response = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(
-      `subject:${query} OR from:${query} OR to:${query}`,
-    )}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      signal,
-    },
-  );
-
-  const data = (await response.json()) as {
-    messages: Array<{
-      id: string;
-      threadId: string;
-    }>;
-  };
-
-  const threadData = await Promise.all(
-    data.messages?.map(async (message) => {
-      const response = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          signal,
+  try {
+    const response = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(
+        `subject:${query} OR from:${query} OR to:${query}`,
+      )}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
-
-      return (await response.json()) as TMessage;
-    }) || [],
-  );
-
-  return threadData?.map((item) => {
-    const subject = item.payload?.headers?.find(
-      (header) => header.name === "Subject",
-    )?.value;
-    const from = item.payload?.headers
-      ?.find((header) => header.name === "From")
-      ?.value?.split("<")[0];
-    const dateText = item.internalDate
-      ? new Date(Number(item.internalDate)).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : undefined;
-
-    const isStarred = item.labelIds?.includes("STARRED");
-    const labelBadges = (item.labelIds ?? [])
-      .filter((l) => ["INBOX", "IMPORTANT", "SENT"].includes(l))
-      .slice(0, 2);
-
-    return (
-      <Card
-        key={item.id}
-        size="3"
-        className="hover:bg-grayA-2 hover:shadow-[inset_0_0_0_1px_var(--gray-a8)]"
-        asChild
-      >
-        <a
-          href={`https://mail.google.com/mail/u/0/#inbox/${encodeURIComponent(item.id ?? "")}`}
-        >
-          <div className="flex items-center gap-2">
-            <GmailLogo className="size-4" />
-            <p className="text-2 text-gray-10 font-medium">Gmail</p>
-            {isStarred ? (
-              <LucideStar className="text-amber-9 fill-amber-9 size-[0.75rem]" />
-            ) : null}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="text-4 line-clamp-1 font-medium">{subject}</p>
-            <div className="flex items-center gap-2">
-              {labelBadges.map((label) => (
-                <Badge key={label} color="gray" variant="surface">
-                  {label}
-                </Badge>
-              ))}
-            </div>
-          </div>
-          <div className="text-2 text-gray-10 mt-2 flex flex-wrap items-center gap-2">
-            {from ? <p className="line-clamp-1">{from}</p> : null}
-            {from && dateText ? <span>·</span> : null}
-            {dateText ? <span>{dateText}</span> : null}
-          </div>
-          {item.snippet ? (
-            <p
-              className="text-3 text-gray-10 mt-2 line-clamp-2"
-              title={item.snippet ?? undefined}
-            >
-              {item.snippet}
-            </p>
-          ) : null}
-        </a>
-      </Card>
+        signal,
+      },
     );
-  });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: new Error(response.statusText),
+      };
+    }
+
+    const data = (await response.json()) as {
+      messages: Array<{
+        id: string;
+        threadId: string;
+      }>;
+    };
+
+    const threadData = await Promise.all(
+      data.messages?.map(async (message) => {
+        const response = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            signal,
+          },
+        );
+
+        return (await response.json()) as TMessage;
+      }) || [],
+    );
+
+    return {
+      error: null,
+      data: threadData?.map((item) => {
+        const subject = item.payload?.headers?.find(
+          (header) => header.name === "Subject",
+        )?.value;
+        const from = item.payload?.headers
+          ?.find((header) => header.name === "From")
+          ?.value?.split("<")[0];
+        const dateText = item.internalDate
+          ? new Date(Number(item.internalDate)).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : undefined;
+
+        const isStarred = item.labelIds?.includes("STARRED");
+        const labelBadges = (item.labelIds ?? [])
+          .filter((l) => ["INBOX", "IMPORTANT", "SENT"].includes(l))
+          .slice(0, 2);
+
+        return (
+          <Card
+            key={item.id}
+            size="3"
+            className="hover:bg-grayA-2 hover:shadow-[inset_0_0_0_1px_var(--gray-a8)]"
+            asChild
+          >
+            <a
+              href={`https://mail.google.com/mail/u/0/#inbox/${encodeURIComponent(item.id ?? "")}`}
+            >
+              <div className="flex items-center gap-2">
+                <GmailLogo className="size-4" />
+                <p className="text-2 text-gray-10 font-medium">Gmail</p>
+                {isStarred ? (
+                  <LucideStar className="text-amber-9 fill-amber-9 size-[0.75rem]" />
+                ) : null}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <p className="text-4 line-clamp-1 font-medium">{subject}</p>
+                <div className="flex items-center gap-2">
+                  {labelBadges.map((label) => (
+                    <Badge key={label} color="gray" variant="surface">
+                      {label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="text-2 text-gray-10 mt-2 flex flex-wrap items-center gap-2">
+                {from ? <p className="line-clamp-1">{from}</p> : null}
+                {from && dateText ? <span>·</span> : null}
+                {dateText ? <span>{dateText}</span> : null}
+              </div>
+              {item.snippet ? (
+                <p
+                  className="text-3 text-gray-10 mt-2 line-clamp-2"
+                  title={item.snippet ?? undefined}
+                >
+                  {item.snippet}
+                </p>
+              ) : null}
+            </a>
+          </Card>
+        );
+      }),
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error:
+        error instanceof Error ? error : new Error("Unknown error occurred"),
+    };
+  }
 }

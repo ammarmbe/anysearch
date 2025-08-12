@@ -1,4 +1,8 @@
+import GithubLogo from "@/components/icons/github";
+import GmailLogo from "@/components/icons/gmail";
+import GoogleDriveLogo from "@/components/icons/google-drive";
 import Logo from "@/components/icons/logo";
+import NotionLogo from "@/components/icons/notion";
 import Integrations from "@/components/integrations";
 import githubSearch from "@/search/github";
 import gmailSearch from "@/search/gmail";
@@ -14,12 +18,22 @@ import {
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { LucideSearch, LucideX } from "lucide-react";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { Fragment, JSX, useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
+
+type SearchResult =
+  | {
+      data: JSX.Element[];
+      error: null;
+    }
+  | {
+      data: null;
+      error: Error;
+    };
 
 async function search(
   session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>,
@@ -27,27 +41,41 @@ async function search(
   selected: string[],
   signal: AbortSignal,
 ) {
-  let data: ReactNode[] = [];
+  let githubPromise: Promise<SearchResult> | undefined = undefined;
+  let notionPromise: Promise<SearchResult> | undefined = undefined;
+  let googleDrivePromise: Promise<SearchResult> | undefined = undefined;
+  let gmailPromise: Promise<SearchResult> | undefined = undefined;
 
   if (selected.includes("github")) {
-    data = data.concat(githubSearch(session, query, signal));
+    githubPromise = githubSearch(session, query, signal);
   }
 
   if (selected.includes("notion")) {
-    data = data.concat(notionSearch(session, query, signal));
+    notionPromise = notionSearch(session, query, signal);
   }
 
   if (selected.includes("googleDrive")) {
-    data = data.concat(googleDriveSearch(query, signal));
+    googleDrivePromise = googleDriveSearch(query, signal);
   }
 
   if (selected.includes("gmail")) {
-    data = data.concat(gmailSearch(query, signal));
+    gmailPromise = gmailSearch(query, signal);
   }
 
-  data = await Promise.all(data);
+  const [githubData, notionData, googleDriveData, gmailData] =
+    await Promise.all([
+      githubPromise,
+      notionPromise,
+      googleDrivePromise,
+      gmailPromise,
+    ]);
 
-  return data;
+  return {
+    github: githubData,
+    notion: notionData,
+    googleDrive: googleDriveData,
+    gmail: gmailData,
+  };
 }
 
 function Home() {
@@ -83,7 +111,7 @@ function Home() {
   }, [session]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-[10rem] lg:gap-9">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-[10rem] lg:gap-5">
       <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 lg:max-w-3xl lg:gap-6">
         <Logo className="w-[80%]" />
         <TextField.Root
@@ -140,6 +168,12 @@ function Home() {
           ) : null}
         </TextField.Root>
       </div>
+      <ErrorUI
+        github={!!data?.github?.error}
+        notion={!!data?.notion?.error}
+        googleDrive={!!data?.googleDrive?.error}
+        gmail={!!data?.gmail?.error}
+      />
       {data ? (
         <div
           style={{
@@ -147,11 +181,45 @@ function Home() {
           }}
           className="grid w-full max-w-7xl gap-4 py-4 lg:gap-5 lg:py-5"
         >
-          {data}
+          {[
+            data.github?.data,
+            data.notion?.data,
+            data.googleDrive?.data,
+            data.gmail?.data,
+          ].map((data, index) => (
+            <Fragment key={index}>
+              {data?.map((item, i) => (
+                <Fragment key={i}>{item}</Fragment>
+              ))}
+            </Fragment>
+          ))}
         </div>
       ) : (
         <Integrations selected={selected} setSelected={setSelected} />
       )}
+    </div>
+  );
+}
+
+function ErrorUI({
+  github,
+  notion,
+  googleDrive,
+  gmail,
+}: {
+  github: boolean;
+  notion: boolean;
+  googleDrive: boolean;
+  gmail: boolean;
+}) {
+  return (
+    <div className="flex h-5 items-center justify-center gap-4">
+      {github ? <GithubLogo className="size-5" fill="#d60808" /> : null}
+      {notion ? <NotionLogo className="size-5" fill="#d60808" /> : null}
+      {googleDrive ? (
+        <GoogleDriveLogo className="size-5" fill="#d60808" />
+      ) : null}
+      {gmail ? <GmailLogo className="size-5" fill="#d60808" /> : null}
     </div>
   );
 }

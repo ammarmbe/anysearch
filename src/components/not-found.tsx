@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-9 p-3">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-7 p-3">
       <svg
         viewBox="0 0 55 30"
         fill="none"
@@ -14,8 +14,8 @@ export default function NotFound() {
           fill="#9EAF8E"
         />
       </svg>
-      <div className="flex flex-col items-center justify-center gap-2">
-        <p className="text-5 text-gray-9 text-center font-medium">
+      <div className="flex flex-col items-center justify-center gap-5">
+        <p className="text-6 text-gray-9 text-center font-medium">
           The page you are looking for does not exist
         </p>
         <Link

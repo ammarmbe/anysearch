@@ -32,28 +32,12 @@ export default function Integrations({
     () =>
       [
         {
-          id: "googleDrive",
-          name: "Google Drive",
-          icon: <GoogleDriveLogo className="size-[4rem]" />,
-          exists: !!session?.googleDriveUsername,
-          usernameField: session?.googleDriveUsername,
-          loginFn: googleDriveLogin,
-        },
-        {
           id: "notion",
           name: "Notion",
           icon: <NotionLogo className="size-[4rem]" />,
           exists: !!session?.notionUsername,
           usernameField: session?.notionUsername,
           loginFn: notionLogin,
-        },
-        {
-          id: "gmail",
-          name: "Gmail",
-          icon: <GmailLogo className="size-[4rem]" />,
-          exists: !!session?.gmailUsername,
-          usernameField: session?.gmailUsername,
-          loginFn: gmailLogin,
         },
         {
           id: "github",
@@ -64,6 +48,22 @@ export default function Integrations({
             ? `@${session?.githubUsername}`
             : undefined,
           loginFn: githubLogin,
+        },
+        {
+          id: "googleDrive",
+          name: "Google Drive",
+          icon: <GoogleDriveLogo className="size-[4rem]" />,
+          exists: !!session?.googleDriveUsername,
+          usernameField: session?.googleDriveUsername,
+          loginFn: googleDriveLogin,
+        },
+        {
+          id: "gmail",
+          name: "Gmail",
+          icon: <GmailLogo className="size-[4rem]" />,
+          exists: !!session?.gmailUsername,
+          usernameField: session?.gmailUsername,
+          loginFn: gmailLogin,
         },
       ] as const,
     [session, githubLogin, googleDriveLogin],

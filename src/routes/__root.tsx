@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import ErrorComponent from "@/components/error-component";
 import NotFound from "@/components/not-found";
 import { Theme } from "@radix-ui/themes";
 import { QueryClient } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
+import { Toaster } from "sonner";
 import globalCss from "../global.css?url";
 
 export const Route = createRootRouteWithContext<{
@@ -30,6 +32,7 @@ export const Route = createRootRouteWithContext<{
   }),
   component: RootComponent,
   notFoundComponent: () => <NotFound />,
+  errorComponent: ({ error }) => <ErrorComponent error={error} />,
 });
 
 function RootComponent() {
@@ -41,6 +44,7 @@ function RootComponent() {
       <body>
         <Theme accentColor="jade">
           <Outlet />
+          <Toaster />
         </Theme>
         <Scripts />
       </body>

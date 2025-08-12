@@ -14,7 +14,7 @@ import {
   LucideFolder,
   LucideStar,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { JSX, type ReactNode } from "react";
 
 function formatFileSize(byteString?: string) {
   if (!byteString) return undefined;
@@ -118,89 +118,109 @@ function getMimeMeta(mimeType?: string): { label: string; icon: ReactNode } {
 export default async function googleDriveSearch(
   query: string,
   signal: AbortSignal,
-) {
+): Promise<
+  { data: JSX.Element[]; error: null } | { data: null; error: Error }
+> {
   const accessToken = await getGoogleDriveAccessTokenFn();
-  if (!accessToken) return [];
+  if (!accessToken) return { data: null, error: new Error("No access token") };
 
-  const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-      `name contains '${query}' and trashed = false`,
-    )}&includeItemsFromAllDrives=true&supportsAllDrives=true&spaces=drive&fields=${encodeURIComponent(
-      "files(id,name,description,webViewLink,mimeType,modifiedTime,size,starred)",
-    )}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+        `name contains '${query}' and trashed = false`,
+      )}&includeItemsFromAllDrives=true&supportsAllDrives=true&spaces=drive&fields=${encodeURIComponent(
+        "files(id,name,description,webViewLink,mimeType,modifiedTime,size,starred)",
+      )}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        signal,
       },
-      signal,
-    },
-  );
-
-  const data = (await response.json()) as {
-    files: Array<{
-      id: string;
-      name: string;
-      description?: string;
-      webViewLink?: string;
-      mimeType?: string;
-      modifiedTime?: string; // RFC 3339 per Drive API
-      size?: string; // returned as string
-      starred?: boolean;
-    }>;
-  };
-
-  return data.files?.map((item) => {
-    const sizeText = formatFileSize(item.size);
-    const modifiedText = item.modifiedTime
-      ? new Date(item.modifiedTime).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : undefined;
-    const mimeMeta = getMimeMeta(item.mimeType);
-
-    return (
-      <Card
-        key={item.id}
-        size="3"
-        className="hover:bg-grayA-2 hover:shadow-[inset_0_0_0_1px_var(--gray-a8)]"
-        asChild
-      >
-        <Link to={item.webViewLink ?? undefined}>
-          <div className="flex items-center gap-2">
-            <GoogleDriveLogo className="size-4" />
-            <p className="text-2 text-gray-10 font-medium">Google Drive</p>
-            {item.starred ? (
-              <LucideStar className="text-amber-9 fill-amber-9 size-[0.75rem]" />
-            ) : null}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="text-4 font-medium">{item.name}</p>
-            <Badge
-              className="flex items-center gap-1"
-              color="gray"
-              variant="surface"
-            >
-              {mimeMeta.icon}
-              {mimeMeta.label}
-            </Badge>
-          </div>
-          <div className="text-2 text-gray-10 mt-2 flex flex-wrap items-center gap-2">
-            {modifiedText ? <span>Updated {modifiedText}</span> : null}
-            {modifiedText && sizeText ? <span>·</span> : null}
-            {sizeText ? <span>{sizeText}</span> : null}
-          </div>
-          {item.description ? (
-            <p
-              className="text-3 text-gray-10 mt-2 line-clamp-3"
-              title={item.description}
-            >
-              {item.description}
-            </p>
-          ) : null}
-        </Link>
-      </Card>
     );
-  });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: new Error(response.statusText),
+      };
+    }
+
+    const data = (await response.json()) as {
+      files: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        webViewLink?: string;
+        mimeType?: string;
+        modifiedTime?: string; // RFC 3339 per Drive API
+        size?: string; // returned as string
+        starred?: boolean;
+      }>;
+    };
+
+    return {
+      error: null,
+      data: data.files?.map((item) => {
+        const sizeText = formatFileSize(item.size);
+        const modifiedText = item.modifiedTime
+          ? new Date(item.modifiedTime).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : undefined;
+        const mimeMeta = getMimeMeta(item.mimeType);
+
+        return (
+          <Card
+            key={item.id}
+            size="3"
+            className="hover:bg-grayA-2 hover:shadow-[inset_0_0_0_1px_var(--gray-a8)]"
+            asChild
+          >
+            <Link to={item.webViewLink ?? undefined}>
+              <div className="flex items-center gap-2">
+                <GoogleDriveLogo className="size-4" />
+                <p className="text-2 text-gray-10 font-medium">Google Drive</p>
+                {item.starred ? (
+                  <LucideStar className="text-amber-9 fill-amber-9 size-[0.75rem]" />
+                ) : null}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <p className="text-4 font-medium">{item.name}</p>
+                <Badge
+                  className="flex items-center gap-1"
+                  color="gray"
+                  variant="surface"
+                >
+                  {mimeMeta.icon}
+                  {mimeMeta.label}
+                </Badge>
+              </div>
+              <div className="text-2 text-gray-10 mt-2 flex flex-wrap items-center gap-2">
+                {modifiedText ? <span>Updated {modifiedText}</span> : null}
+                {modifiedText && sizeText ? <span>·</span> : null}
+                {sizeText ? <span>{sizeText}</span> : null}
+              </div>
+              {item.description ? (
+                <p
+                  className="text-3 text-gray-10 mt-2 line-clamp-3"
+                  title={item.description}
+                >
+                  {item.description}
+                </p>
+              ) : null}
+            </Link>
+          </Card>
+        );
+      }),
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error:
+        error instanceof Error ? error : new Error("Unknown error occurred"),
+    };
+  }
 }

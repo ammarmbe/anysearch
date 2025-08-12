@@ -26,15 +26,11 @@ export const ServerRoute = createServerFileRoute(
       storedState === null ||
       codeVerifier === null
     ) {
-      return new Response(null, {
-        status: 400,
-      });
+      throw new Error("Invalid code or state");
     }
 
     if (state !== storedState) {
-      return new Response(null, {
-        status: 400,
-      });
+      throw new Error("Invalid state");
     }
 
     let tokens: OAuth2Tokens;
@@ -42,9 +38,7 @@ export const ServerRoute = createServerFileRoute(
     try {
       tokens = await google.validateAuthorizationCode(code, codeVerifier);
     } catch (e) {
-      return new Response(null, {
-        status: 400,
-      });
+      throw new Error("Invalid code");
     }
 
     const accessToken = tokens.accessToken();
