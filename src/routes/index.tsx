@@ -10,7 +10,7 @@ import googleDriveSearch from "@/search/google-drive";
 import notionSearch from "@/search/notion";
 import { INTEGRATIONS, useSession } from "@/utils/helpers";
 import type { getSessionFn } from "@/utils/server-functions";
-import { IconButton, Spinner, TextField } from "@radix-ui/themes";
+import { IconButton, Spinner, TextField, Tooltip } from "@radix-ui/themes";
 import {
   keepPreviousData,
   useQuery,
@@ -169,31 +169,52 @@ function Home() {
         </TextField.Root>
       </div>
       <ErrorUI
-        github={!!data?.github?.error}
-        notion={!!data?.notion?.error}
-        googleDrive={!!data?.googleDrive?.error}
-        gmail={!!data?.gmail?.error}
+        github={data?.github?.error}
+        notion={data?.notion?.error}
+        googleDrive={data?.googleDrive?.error}
+        gmail={data?.gmail?.error}
       />
       {data ? (
-        <div
-          style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-          }}
-          className="grid w-full max-w-7xl gap-4 py-4 lg:gap-5 lg:py-5"
-        >
+        <>
           {[
             data.github?.data,
             data.notion?.data,
             data.googleDrive?.data,
             data.gmail?.data,
-          ].map((data, index) => (
-            <Fragment key={index}>
-              {data?.map((item, i) => (
-                <Fragment key={i}>{item}</Fragment>
+          ].some((data) => data && data.length > 0) ? (
+            <div
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+              }}
+              className="grid w-full max-w-7xl gap-4 py-4 lg:gap-5 lg:py-5"
+            >
+              {[
+                data.github?.data,
+                data.notion?.data,
+                data.googleDrive?.data,
+                data.gmail?.data,
+              ].map((data, index) => (
+                <Fragment key={index}>
+                  {data?.map((item, i) => (
+                    <Fragment key={i}>{item}</Fragment>
+                  ))}
+                </Fragment>
               ))}
-            </Fragment>
-          ))}
-        </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="text-gray-9 mb-2">
+                <LucideSearch className="size-12" />
+              </div>
+              <p className="text-4 text-gray-11 mb-1 font-medium">
+                No results found
+              </p>
+              <p className="text-3 text-gray-10">
+                Try adjusting your search query or check your integrations
+              </p>
+            </div>
+          )}
+        </>
       ) : (
         <Integrations selected={selected} setSelected={setSelected} />
       )}
@@ -207,19 +228,41 @@ function ErrorUI({
   googleDrive,
   gmail,
 }: {
-  github: boolean;
-  notion: boolean;
-  googleDrive: boolean;
-  gmail: boolean;
+  github?: Error | null;
+  notion?: Error | null;
+  googleDrive?: Error | null;
+  gmail?: Error | null;
 }) {
   return (
     <div className="flex h-5 items-center justify-center gap-4">
-      {github ? <GithubLogo className="size-5" fill="#d60808" /> : null}
-      {notion ? <NotionLogo className="size-5" fill="#d60808" /> : null}
-      {googleDrive ? (
-        <GoogleDriveLogo className="size-5" fill="#d60808" />
+      {github ? (
+        <Tooltip content={`GitHub Error: ${github.message}`}>
+          <button>
+            <GithubLogo className="size-5" fill="#d60808" />
+          </button>
+        </Tooltip>
       ) : null}
-      {gmail ? <GmailLogo className="size-5" fill="#d60808" /> : null}
+      {notion ? (
+        <Tooltip content={`Notion Error: ${notion.message}`}>
+          <button>
+            <NotionLogo className="size-5" fill="#d60808" />
+          </button>
+        </Tooltip>
+      ) : null}
+      {googleDrive ? (
+        <Tooltip content={`Google Drive Error: ${googleDrive.message}`}>
+          <button>
+            <GoogleDriveLogo className="size-5" fill="#d60808" />
+          </button>
+        </Tooltip>
+      ) : null}
+      {gmail ? (
+        <Tooltip content={`Gmail Error: ${gmail.message}`}>
+          <button>
+            <GmailLogo className="size-5" fill="#d60808" />
+          </button>
+        </Tooltip>
+      ) : null}
     </div>
   );
 }
