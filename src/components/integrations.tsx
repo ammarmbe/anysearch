@@ -4,6 +4,10 @@ import {
   gmailLoginFn,
   googleDriveLoginFn,
   notionLoginFn,
+  unlinkGithubFn,
+  unlinkGmailFn,
+  unlinkGoogleDriveFn,
+  unlinkNotionFn,
 } from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,11 +26,15 @@ export default function Integrations({
   selected: (typeof INTEGRATIONS)[number][];
   setSelected: (selected: (typeof INTEGRATIONS)[number][]) => void;
 }) {
-  const { data: session, isLoading: isSessionLoading } = useSession();
+  const { data: session, isLoading: isSessionLoading, refetch } = useSession();
   const githubLogin = useServerFn(githubLoginFn);
   const googleDriveLogin = useServerFn(googleDriveLoginFn);
   const gmailLogin = useServerFn(gmailLoginFn);
   const notionLogin = useServerFn(notionLoginFn);
+  const unlinkGithub = useServerFn(unlinkGithubFn);
+  const unlinkGoogleDrive = useServerFn(unlinkGoogleDriveFn);
+  const unlinkGmail = useServerFn(unlinkGmailFn);
+  const unlinkNotion = useServerFn(unlinkNotionFn);
 
   const integrations = useMemo(
     () =>
@@ -38,6 +46,7 @@ export default function Integrations({
           exists: !!session?.notionUsername,
           usernameField: session?.notionUsername,
           loginFn: notionLogin,
+          unlinkFn: unlinkNotion,
         },
         {
           id: "github",
@@ -48,6 +57,7 @@ export default function Integrations({
             ? `@${session?.githubUsername}`
             : undefined,
           loginFn: githubLogin,
+          unlinkFn: unlinkGithub,
         },
         {
           id: "googleDrive",
@@ -56,6 +66,7 @@ export default function Integrations({
           exists: !!session?.googleDriveUsername,
           usernameField: session?.googleDriveUsername,
           loginFn: googleDriveLogin,
+          unlinkFn: unlinkGoogleDrive,
         },
         {
           id: "gmail",
@@ -64,9 +75,10 @@ export default function Integrations({
           exists: !!session?.gmailUsername,
           usernameField: session?.gmailUsername,
           loginFn: gmailLogin,
+          unlinkFn: unlinkGmail,
         },
       ] as const,
-    [session, githubLogin, googleDriveLogin],
+    [session, githubLogin, googleDriveLogin, gmailLogin, notionLogin, unlinkGithub, unlinkGoogleDrive, unlinkGmail, unlinkNotion],
   );
 
   return (
@@ -119,6 +131,22 @@ export default function Integrations({
                   <p className="text-2 text-gray-10 flex h-6 items-center justify-center">
                     {integration.usernameField}
                   </p>
+                  <Button
+                    color="red"
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      const ok = await integration.unlinkFn();
+                      if (ok) {
+                        await refetch();
+                        setSelected((prev) =>
+                          prev.filter((id) => id !== integration.id),
+                        );
+                      }
+                    }}
+                  >
+                    Unlink
+                  </Button>
                 </CheckboxCards.Item>
               ) : (
                 <Card
