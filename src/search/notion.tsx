@@ -1,7 +1,6 @@
 import NotionLogo from "@/components/icons/notion";
 import type { getSessionFn } from "@/utils/server-functions";
 import { Badge, Card } from "@radix-ui/themes";
-import { JSX } from "react";
 
 type NotionRichText = { plain_text?: string };
 
@@ -52,13 +51,17 @@ function extractTitle(result: NotionPage | NotionDatabase): string | undefined {
   return undefined;
 }
 
-export default async function notionSearch(
-  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>,
-  query: string,
-  signal: AbortSignal,
-): Promise<
-  { data: JSX.Element[]; error: null } | { data: null; error: Error }
-> {
+export default async function notionSearch({
+  session,
+  query,
+  signal,
+  aiEnhanced,
+}: {
+  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>;
+  query: string;
+  signal: AbortSignal;
+  aiEnhanced: boolean;
+}) {
   const accessToken = session.notionAccessToken;
   if (!accessToken) return { data: null, error: new Error("No access token") };
 

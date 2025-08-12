@@ -1,8 +1,8 @@
+import { googleDriveLoginFn } from "@/search/google-drive";
 import { cn, INTEGRATIONS, useSession } from "@/utils/helpers";
 import {
   githubLoginFn,
   gmailLoginFn,
-  googleDriveLoginFn,
   notionLoginFn,
   unlinkGithubFn,
   unlinkGmailFn,

@@ -2,7 +2,6 @@ import GmailLogo from "@/components/icons/gmail";
 import { getGmailAccessTokenFn } from "@/utils/server-functions";
 import { Badge, Card } from "@radix-ui/themes";
 import { LucideStar } from "lucide-react";
-import { JSX } from "react";
 
 type TMessage = {
   /**
@@ -99,12 +98,15 @@ type TMessagePartHeader = {
   value?: string | null;
 };
 
-export default async function gmailSearch(
-  query: string,
-  signal: AbortSignal,
-): Promise<
-  { data: JSX.Element[]; error: null } | { data: null; error: Error }
-> {
+export default async function gmailSearch({
+  query,
+  signal,
+  aiEnhanced,
+}: {
+  query: string;
+  signal: AbortSignal;
+  aiEnhanced: boolean;
+}) {
   const accessToken = await getGmailAccessTokenFn();
   if (!accessToken) return { data: null, error: new Error("No access token") };
 

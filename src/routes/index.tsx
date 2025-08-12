@@ -6,7 +6,7 @@ import NotionLogo from "@/components/icons/notion";
 import Integrations from "@/components/integrations";
 import githubSearch from "@/search/github";
 import gmailSearch from "@/search/gmail";
-import googleDriveSearch from "@/search/google-drive";
+import { googleDriveSearch } from "@/search/google-drive";
 import notionSearch from "@/search/notion";
 import { INTEGRATIONS, useSession } from "@/utils/helpers";
 import type { getSessionFn } from "@/utils/server-functions";
@@ -35,31 +35,38 @@ type SearchResult =
       error: Error;
     };
 
-async function search(
-  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>,
-  query: string,
-  selected: string[],
-  signal: AbortSignal,
-) {
+async function search({
+  session,
+  query,
+  selected,
+  signal,
+  aiEnhanced,
+}: {
+  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>;
+  query: string;
+  selected: string[];
+  signal: AbortSignal;
+  aiEnhanced: boolean;
+}) {
   let githubPromise: Promise<SearchResult> | undefined = undefined;
   let notionPromise: Promise<SearchResult> | undefined = undefined;
   let googleDrivePromise: Promise<SearchResult> | undefined = undefined;
   let gmailPromise: Promise<SearchResult> | undefined = undefined;
 
   if (selected.includes("github")) {
-    githubPromise = githubSearch(session, query, signal);
+    githubPromise = githubSearch({ session, query, signal, aiEnhanced });
   }
 
   if (selected.includes("notion")) {
-    notionPromise = notionSearch(session, query, signal);
+    notionPromise = notionSearch({ session, query, signal, aiEnhanced });
   }
 
   if (selected.includes("googleDrive")) {
-    googleDrivePromise = googleDriveSearch(query, signal);
+    googleDrivePromise = googleDriveSearch({ query, signal, aiEnhanced });
   }
 
   if (selected.includes("gmail")) {
-    gmailPromise = gmailSearch(query, signal);
+    gmailPromise = gmailSearch({ query, signal, aiEnhanced });
   }
 
   const [githubData, notionData, googleDriveData, gmailData] =
@@ -83,6 +90,7 @@ function Home() {
   const { data: session } = useSession();
 
   const [query, setQuery] = useState("");
+  const [aiEnhanced, setAiEnhanced] = useState(false);
   const [selected, setSelected] = useState<(typeof INTEGRATIONS)[number][]>([
     ...INTEGRATIONS,
   ]);
@@ -90,11 +98,12 @@ function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data, isFetching, isPlaceholderData, isLoading } = useQuery({
-    queryKey: ["search", query, selected],
+    queryKey: ["search", session, query, selected, aiEnhanced],
     queryFn:
       !query || !session
         ? () => null
-        : async ({ signal }) => await search(session, query, selected, signal),
+        : async ({ signal }) =>
+            await search({ session, query, selected, signal, aiEnhanced }),
     placeholderData: keepPreviousData,
   });
 
@@ -111,7 +120,7 @@ function Home() {
   }, [session]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-[10rem] lg:gap-5">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-4 py-[10rem] lg:gap-5">
       <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 lg:max-w-3xl lg:gap-6">
         <Logo className="w-[80%]" />
         <TextField.Root
@@ -148,35 +157,43 @@ function Home() {
             )}
           </TextField.Slot>
           {query ? (
-            <>
-              <TextField.Slot className="-mr-1 aspect-square h-full items-center justify-center px-0">
-                <IconButton
-                  size="3"
-                  variant="ghost"
-                  color="gray"
-                  className="rounded-1 lg:size-5"
-                  onClick={() => {
-                    setQuery("");
-                    if (inputRef.current) {
-                      inputRef.current.value = "";
-                      inputRef.current.focus();
-                    }
-                  }}
-                >
-                  <LucideX className="size-[1rem] lg:size-[1.25rem]" />
-                </IconButton>
-              </TextField.Slot>
-              <TextField.Slot className="mr-0 aspect-square h-full items-center justify-center px-0">
-                <IconButton
-                  size="3"
-                  variant="ghost"
-                  className="rounded-1 lg:size-5"
-                >
-                  <LucideSparkles className="size-[1rem] lg:size-[1.25rem]" />
-                </IconButton>
-              </TextField.Slot>
-            </>
+            <TextField.Slot className="-mr-[0.1875rem] aspect-square h-full items-center justify-center px-0">
+              <IconButton
+                size="3"
+                variant="ghost"
+                color="gray"
+                className="rounded-1 m-0 box-border size-[2rem] lg:size-[2.5rem]"
+                onClick={() => {
+                  setQuery("");
+                  if (inputRef.current) {
+                    inputRef.current.value = "";
+                    inputRef.current.focus();
+                  }
+                }}
+              >
+                <LucideX className="size-[1rem] lg:size-[1.25rem]" />
+              </IconButton>
+            </TextField.Slot>
           ) : null}
+          <TextField.Slot className="mr-0 aspect-square h-full items-center justify-center px-0">
+            <Tooltip
+              content={
+                aiEnhanced
+                  ? "Disable AI Enhanced Search"
+                  : "Enable AI Enhanced Search"
+              }
+            >
+              <IconButton
+                size="3"
+                variant={aiEnhanced ? "soft" : "ghost"}
+                color={aiEnhanced ? undefined : "gray"}
+                className="rounded-1 m-0 box-border size-[2rem] lg:size-[2.5rem]"
+                onClick={() => setAiEnhanced(!aiEnhanced)}
+              >
+                <LucideSparkles className="size-[1rem] lg:size-[1.25rem]" />
+              </IconButton>
+            </Tooltip>
+          </TextField.Slot>
         </TextField.Root>
       </div>
       <ErrorUI
