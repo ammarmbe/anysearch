@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build"
+    "build": "vite build",
+    "postinstall": "prisma generate"
   },
   "prettier": {
     "plugins": [
