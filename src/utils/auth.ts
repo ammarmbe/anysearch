@@ -18,19 +18,19 @@ const activityCheckIntervalSeconds = 60 * 60 * 24; // 1 day
 export const github = new GitHub(
   process.env["GITHUB_CLIENT_ID"]!,
   process.env["GITHUB_CLIENT_SECRET"]!,
-  `${process.env["BASE_URL"]}/api/auth/callback/github`,
+  process.env["GITHUB_CLIENT_REDIRECT_URI"]!,
 );
 
 export const google = new Google(
   process.env["GOOGLE_CLIENT_ID"]!,
   process.env["GOOGLE_CLIENT_SECRET"]!,
-  `${process.env["BASE_URL"]}/api/auth/callback/google`,
+  process.env["GOOGLE_CLIENT_REDIRECT_URI"]!,
 );
 
 export const notion = new Notion(
   process.env["NOTION_CLIENT_ID"]!,
   process.env["NOTION_CLIENT_SECRET"]!,
-  `${process.env["BASE_URL"]}/api/auth/callback/notion`,
+  process.env["NOTION_CLIENT_REDIRECT_URI"]!,
 );
 
 // Helpers
