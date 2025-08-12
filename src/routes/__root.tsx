@@ -31,6 +31,16 @@ export const Route = createRootRouteWithContext<{
     links: [
       { rel: "stylesheet", href: globalCss },
       { rel: "icon", href: "/favicon.ico" },
+      { rel: "og:image", href: "/opengraph.png" },
+      { rel: "image_src", href: "/opengraph.png" },
+      { property: "og:image:width", content: "1280" },
+      { property: "og:image:height", content: "640" },
+      { property: "og:title", content: "AnySearch" },
+      {
+        property: "og:description",
+        content:
+          "AnySearch lets you search across Notion, GitHub, Google Drive, and Gmail from one place.",
+      },
     ],
   }),
   component: RootComponent,

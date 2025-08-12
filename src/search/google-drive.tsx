@@ -447,7 +447,12 @@ export async function googleDriveSearch({
             className="hover:bg-grayA-2 hover:shadow-[inset_0_0_0_1px_var(--gray-a8)]"
             asChild
           >
-            <Link to={item.webViewLink ?? undefined}>
+            <Link
+              to={
+                item.webViewLink ??
+                `https://drive.google.com/open?id=${item.id}`
+              }
+            >
               <div className="flex items-center gap-2">
                 <GoogleDriveLogo className="size-4" />
                 <p className="text-2 text-gray-10 font-medium">Google Drive</p>

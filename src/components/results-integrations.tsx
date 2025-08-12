@@ -20,6 +20,7 @@ export default function ResultsIntegrations({
   setSelected,
   data,
   query,
+  isLoading,
 }: {
   session: TSession | null | undefined;
   selected: (typeof INTEGRATIONS)[number][];
@@ -34,6 +35,7 @@ export default function ResultsIntegrations({
     | null
     | undefined;
   query: string;
+  isLoading: boolean;
 }) {
   const queryClient = useQueryClient();
 
@@ -239,7 +241,8 @@ export default function ResultsIntegrations({
         </Accordion.Item>
 
         <Accordion.Item value="results" className="flex w-full flex-col">
-          {[
+          {query &&
+          [
             data?.github?.data,
             data?.notion?.data,
             data?.googleDrive?.data,
@@ -264,7 +267,7 @@ export default function ResultsIntegrations({
                 </Fragment>
               ))}
             </div>
-          ) : query ? (
+          ) : query && !isLoading ? (
             <div className="flex flex-col items-center justify-center py-[4rem] text-center">
               <div className="text-gray-9 mb-2">
                 <LucideSearch className="size-12" />

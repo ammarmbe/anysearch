@@ -13,6 +13,7 @@ import {
 import { IconButton, Spinner, TextField, Tooltip } from "@radix-ui/themes";
 import {
   keepPreviousData,
+  skipToken,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -91,10 +92,11 @@ function Home() {
     queryKey: ["search", session, query, selected, aiEnhanced],
     queryFn:
       !query || !session
-        ? () => null
+        ? skipToken
         : async ({ signal }) =>
             await search({ session, query, selected, signal, aiEnhanced }),
     placeholderData: keepPreviousData,
+    enabled: !!query && !!session,
   });
 
   const debouncedSetQuery = useDebouncedCallback((value: string) => {
@@ -192,6 +194,7 @@ function Home() {
         setSelected={setSelected}
         data={data}
         query={query}
+        isLoading={isLoading}
       />
     </div>
   );
