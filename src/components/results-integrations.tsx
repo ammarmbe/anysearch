@@ -148,9 +148,9 @@ export default function ResultsIntegrations({
                 fill={
                   integration.error
                     ? "#d60808"
-                    : selected.includes(integration.id)
-                      ? undefined
-                      : "#dddddd"
+                    : !selected.includes(integration.id) || !session
+                      ? "#dddddd"
+                      : undefined
                 }
               />
             </button>

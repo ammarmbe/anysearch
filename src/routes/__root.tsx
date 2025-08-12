@@ -28,7 +28,10 @@ export const Route = createRootRouteWithContext<{
         title: "AnySearch",
       },
     ],
-    links: [{ rel: "stylesheet", href: globalCss }],
+    links: [
+      { rel: "stylesheet", href: globalCss },
+      { rel: "icon", href: "/favicon.ico" },
+    ],
   }),
   component: RootComponent,
   notFoundComponent: () => <NotFound />,

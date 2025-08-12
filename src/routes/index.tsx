@@ -139,7 +139,7 @@ function Home() {
             }
           }}
         >
-          <TextField.Slot className="ml-0 lg:px-[0.8125rem]">
+          <TextField.Slot className="ml-0 flex aspect-square h-[2.375rem] items-center justify-center px-0 lg:h-[2.875rem]">
             {isLoading || (isFetching && isPlaceholderData) ? (
               <Spinner className="size-[0.9375rem] lg:size-[1.25rem]" />
             ) : (
