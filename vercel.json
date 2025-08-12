@@ -1,8 +1,10 @@
 {
-  "rewrites": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
     {
-      "source": "/notion/:path(.*)",
-      "destination": "https://api.notion.com/:path"
+      "source": "/notion/:path*",
+      "destination": "https://api.notion.com/:path*",
+      "permanent": false
     }
   ]
 }
