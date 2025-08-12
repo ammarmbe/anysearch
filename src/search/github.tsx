@@ -1,6 +1,6 @@
 import GithubLogo from "@/components/icons/github";
 import { model } from "@/utils/ai";
-import type { getSessionFn } from "@/utils/server-functions";
+import { TSession } from "@/utils/helpers";
 import { request } from "@octokit/request";
 import { Badge, Card } from "@radix-ui/themes";
 import { Link, redirect } from "@tanstack/react-router";
@@ -14,7 +14,7 @@ import { getSession, github } from "../utils/auth";
 import db from "../utils/db";
 
 const PROMPT = `
-You are a helpful assistant. Your task is to generate parameters for a Google Drive API request. The request will be to the \`files.list\` endpoint, and it will be used to search for files in Google Drive.
+You are a helpful assistant. Your task is to generate parameters for a GitHub API request. The request will be to the \`search/repositories\` endpoint, and it will be used to search for repositories on GitHub.
 
 The user will provide a query, and you will need to generate the parameters for the request which optimally fulfils the user's query.
 
@@ -318,7 +318,7 @@ export async function githubSearch({
   signal,
   aiEnhanced,
 }: {
-  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>;
+  session: TSession;
   query: string;
   signal: AbortSignal;
   aiEnhanced: boolean;

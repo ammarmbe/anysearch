@@ -1,12 +1,8 @@
 import { githubLoginFn, unlinkGithubFn } from "@/search/github";
+import { gmailLoginFn, unlinkGmailFn } from "@/search/gmail";
 import { googleDriveLoginFn, unlinkGoogleDriveFn } from "@/search/google-drive";
+import { notionLoginFn, unlinkNotionFn } from "@/search/notion";
 import { cn, INTEGRATIONS, useSession } from "@/utils/helpers";
-import {
-  gmailLoginFn,
-  notionLoginFn,
-  unlinkGmailFn,
-  unlinkNotionFn,
-} from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
 import { useServerFn } from "@tanstack/react-start";
 import { LucideCheck, LucideChevronDown, LucideEdit } from "lucide-react";

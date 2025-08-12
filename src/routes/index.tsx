@@ -5,11 +5,10 @@ import Logo from "@/components/icons/logo";
 import NotionLogo from "@/components/icons/notion";
 import Integrations from "@/components/integrations";
 import { githubSearch } from "@/search/github";
-import gmailSearch from "@/search/gmail";
+import { gmailSearch } from "@/search/gmail";
 import { googleDriveSearch } from "@/search/google-drive";
-import notionSearch from "@/search/notion";
-import { INTEGRATIONS, useSession } from "@/utils/helpers";
-import type { getSessionFn } from "@/utils/server-functions";
+import { notionSearch } from "@/search/notion";
+import { INTEGRATIONS, TSession, useSession } from "@/utils/helpers";
 import { IconButton, Spinner, TextField, Tooltip } from "@radix-ui/themes";
 import {
   keepPreviousData,
@@ -42,7 +41,7 @@ async function search({
   signal,
   aiEnhanced,
 }: {
-  session: NonNullable<Awaited<ReturnType<typeof getSessionFn>>>;
+  session: TSession;
   query: string;
   selected: string[];
   signal: AbortSignal;
