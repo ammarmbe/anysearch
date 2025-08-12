@@ -3,10 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { clsx, type ClassValue } from "clsx";
+import { JSX } from "react";
 import { twMerge } from "tailwind-merge";
 import { getSession } from "./auth";
 
 export type TSession = Omit<Session, "secretHash">;
+export type SearchResult =
+  | {
+      data: JSX.Element[];
+      error: null;
+    }
+  | {
+      data: null;
+      error: Error;
+    };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

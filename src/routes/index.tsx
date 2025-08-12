@@ -1,14 +1,15 @@
-import GithubLogo from "@/components/icons/github";
-import GmailLogo from "@/components/icons/gmail";
-import GoogleDriveLogo from "@/components/icons/google-drive";
 import Logo from "@/components/icons/logo";
-import NotionLogo from "@/components/icons/notion";
-import Integrations from "@/components/integrations";
+import ResultsIntegrations from "@/components/results-integrations";
 import { githubSearch } from "@/search/github";
 import { gmailSearch } from "@/search/gmail";
 import { googleDriveSearch } from "@/search/google-drive";
 import { notionSearch } from "@/search/notion";
-import { INTEGRATIONS, TSession, useSession } from "@/utils/helpers";
+import {
+  INTEGRATIONS,
+  SearchResult,
+  TSession,
+  useSession,
+} from "@/utils/helpers";
 import { IconButton, Spinner, TextField, Tooltip } from "@radix-ui/themes";
 import {
   keepPreviousData,
@@ -17,22 +18,12 @@ import {
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { LucideSearch, LucideSparkles, LucideX } from "lucide-react";
-import { Fragment, JSX, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
-
-type SearchResult =
-  | {
-      data: JSX.Element[];
-      error: null;
-    }
-  | {
-      data: null;
-      error: Error;
-    };
 
 async function search({
   session,
@@ -119,7 +110,7 @@ function Home() {
   }, [session]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-4 py-[10rem] lg:gap-5">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 py-[10rem]">
       <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 lg:max-w-3xl lg:gap-6">
         <Logo className="w-[80%]" />
         <TextField.Root
@@ -195,141 +186,13 @@ function Home() {
           </TextField.Slot>
         </TextField.Root>
       </div>
-      <MiniIntegrations
+      <ResultsIntegrations
+        session={session}
         selected={selected}
         setSelected={setSelected}
-        errors={{
-          github: data?.github?.error,
-          notion: data?.notion?.error,
-          googleDrive: data?.googleDrive?.error,
-          gmail: data?.gmail?.error,
-        }}
+        data={data}
+        query={query}
       />
-      {data ? (
-        <>
-          {[
-            data.github?.data,
-            data.notion?.data,
-            data.googleDrive?.data,
-            data.gmail?.data,
-          ].some((data) => data && data.length > 0) ? (
-            <div
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-              }}
-              className="grid w-full max-w-7xl gap-4 py-4 lg:gap-5 lg:py-5"
-            >
-              {[
-                data.github?.data,
-                data.notion?.data,
-                data.googleDrive?.data,
-                data.gmail?.data,
-              ].map((data, index) => (
-                <Fragment key={index}>
-                  {data?.map((item, i) => (
-                    <Fragment key={i}>{item}</Fragment>
-                  ))}
-                </Fragment>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="text-gray-9 mb-2">
-                <LucideSearch className="size-12" />
-              </div>
-              <p className="text-4 text-gray-11 mb-1 font-medium">
-                No results found
-              </p>
-              <p className="text-3 text-gray-10">
-                Try adjusting your search query or check your integrations
-              </p>
-            </div>
-          )}
-        </>
-      ) : (
-        <Integrations selected={selected} setSelected={setSelected} />
-      )}
-    </div>
-  );
-}
-
-function MiniIntegrations({
-  selected,
-  setSelected,
-  errors,
-}: {
-  selected: (typeof INTEGRATIONS)[number][];
-  setSelected: (selected: (typeof INTEGRATIONS)[number][]) => void;
-  errors: {
-    github?: Error | null;
-    notion?: Error | null;
-    googleDrive?: Error | null;
-    gmail?: Error | null;
-  };
-}) {
-  return (
-    <div className="flex h-5 items-center justify-center gap-4">
-      {(
-        [
-          {
-            key: "notion",
-            Logo: NotionLogo,
-            label: "Notion",
-            error: errors.notion,
-          },
-          {
-            key: "github",
-            Logo: GithubLogo,
-            label: "GitHub",
-            error: errors.github,
-          },
-          {
-            key: "googleDrive",
-            Logo: GoogleDriveLogo,
-            label: "Google Drive",
-            error: errors.googleDrive,
-          },
-          {
-            key: "gmail",
-            Logo: GmailLogo,
-            label: "Gmail",
-            error: errors.gmail,
-          },
-        ] as const
-      ).map(({ key, Logo, label, error }) => (
-        <Tooltip
-          key={key}
-          content={
-            error
-              ? error.message
-                ? `${label} Error: ${error.message}`
-                : `Unknown ${label} error`
-              : `Toggle ${label} results`
-          }
-        >
-          <button
-            className="cursor-pointer"
-            onClick={() => {
-              setSelected(
-                selected.includes(key)
-                  ? selected.filter((i) => i !== key)
-                  : [...selected, key],
-              );
-            }}
-          >
-            <Logo
-              className="size-5"
-              fill={
-                error
-                  ? "#d60808"
-                  : selected.includes(key)
-                    ? undefined
-                    : "#dddddd"
-              }
-            />
-          </button>
-        </Tooltip>
-      ))}
     </div>
   );
 }
