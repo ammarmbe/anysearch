@@ -1,4 +1,4 @@
-import { INTEGRATIONS, useSession } from "@/utils/helpers";
+import { cn, INTEGRATIONS, useSession } from "@/utils/helpers";
 import {
   githubLoginFn,
   gmailLoginFn,
@@ -11,9 +11,9 @@ import {
 } from "@/utils/server-functions";
 import { Button, Card, CheckboxCards } from "@radix-ui/themes";
 import { useServerFn } from "@tanstack/react-start";
-import { LucideChevronDown } from "lucide-react";
+import { LucideCheck, LucideChevronDown, LucideEdit } from "lucide-react";
 import { Accordion } from "radix-ui";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import GithubLogo from "./icons/github";
 import GmailLogo from "./icons/gmail";
 import GoogleDriveLogo from "./icons/google-drive";
@@ -27,6 +27,9 @@ export default function Integrations({
   setSelected: (selected: (typeof INTEGRATIONS)[number][]) => void;
 }) {
   const { data: session, isLoading: isSessionLoading, refetch } = useSession();
+
+  const [editMode, setEditMode] = useState(false);
+
   const githubLogin = useServerFn(githubLoginFn);
   const googleDriveLogin = useServerFn(googleDriveLoginFn);
   const gmailLogin = useServerFn(gmailLoginFn);
@@ -78,7 +81,17 @@ export default function Integrations({
           unlinkFn: unlinkGmail,
         },
       ] as const,
-    [session, githubLogin, googleDriveLogin, gmailLogin, notionLogin, unlinkGithub, unlinkGoogleDrive, unlinkGmail, unlinkNotion],
+    [
+      session,
+      githubLogin,
+      googleDriveLogin,
+      gmailLogin,
+      notionLogin,
+      unlinkGithub,
+      unlinkGoogleDrive,
+      unlinkGmail,
+      unlinkNotion,
+    ],
   );
 
   return (
@@ -115,12 +128,54 @@ export default function Integrations({
           >
             {integrations.map((integration, index) =>
               integration.exists ? (
-                <CheckboxCards.Item
-                  value={integration.id}
+                <div className="rounded-3 border-grayA-5 flex flex-col border">
+                  <CheckboxCards.Item
+                    value={integration.id}
+                    key={index}
+                    className="bg-background -m-px flex grow flex-col items-center justify-start gap-3 px-3 text-center [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="flex items-center justify-center">
+                        {integration.icon}
+                      </div>
+                      <p className="text-3 text-gray-11 font-medium">
+                        {integration.name}
+                      </p>
+                    </div>
+                    <p className="text-2 text-gray-10 flex h-6 items-center justify-center">
+                      {integration.usernameField}
+                    </p>
+                  </CheckboxCards.Item>
+                  <div
+                    className={cn(
+                      "p-3 transition-all",
+                      !editMode ? "-mt-[3.5rem]" : undefined,
+                    )}
+                  >
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      color="red"
+                      onClick={async () => {
+                        const ok = await integration.unlinkFn();
+                        if (ok) {
+                          await refetch();
+                          setSelected(
+                            selected.filter((id) => id !== integration.id),
+                          );
+                        }
+                      }}
+                    >
+                      Unlink
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Card
                   key={index}
-                  className="flex flex-col items-center justify-start gap-3 px-3 text-center [&>button[role=checkbox]]:top-[0.625rem] [&>button[role=checkbox]]:right-[0.625rem] [&>button[role=checkbox]]:h-[1rem]"
+                  className="flex flex-col items-center justify-between gap-3 p-[0.875rem] text-center"
                 >
-                  <div className="flex flex-col items-center justify-center gap-3">
+                  <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-center">
                       {integration.icon}
                     </div>
@@ -128,37 +183,6 @@ export default function Integrations({
                       {integration.name}
                     </p>
                   </div>
-                  <p className="text-2 text-gray-10 flex h-6 items-center justify-center">
-                    {integration.usernameField}
-                  </p>
-                  <Button
-                    color="red"
-                    variant="outline"
-                    className="w-full"
-                    onClick={async () => {
-                      const ok = await integration.unlinkFn();
-                      if (ok) {
-                        await refetch();
-                        setSelected((prev) =>
-                          prev.filter((id) => id !== integration.id),
-                        );
-                      }
-                    }}
-                  >
-                    Unlink
-                  </Button>
-                </CheckboxCards.Item>
-              ) : (
-                <Card
-                  key={index}
-                  className="flex flex-col items-center justify-start gap-3 p-[0.875rem] text-center"
-                >
-                  <div className="flex items-center justify-center">
-                    {integration.icon}
-                  </div>
-                  <p className="text-3 text-gray-11 font-medium">
-                    {integration.name}
-                  </p>
                   <Button
                     onClick={async () => await integration.loginFn()}
                     variant="outline"
@@ -170,6 +194,20 @@ export default function Integrations({
                 </Card>
               ),
             )}
+
+            <Card
+              className="hover:border-grayA-7 border-grayA-5 flex items-center justify-center border before:hidden after:hidden"
+              onClick={() => setEditMode(!editMode)}
+              asChild
+            >
+              <button>
+                {editMode ? (
+                  <LucideCheck className="text-gray-7 size-[3rem]" />
+                ) : (
+                  <LucideEdit className="text-gray-7 size-[3rem]" />
+                )}
+              </button>
+            </Card>
           </CheckboxCards.Root>
         </Accordion.Content>
       </Accordion.Item>
