@@ -195,11 +195,15 @@ function Home() {
           </TextField.Slot>
         </TextField.Root>
       </div>
-      <ErrorUI
-        github={data?.github?.error}
-        notion={data?.notion?.error}
-        googleDrive={data?.googleDrive?.error}
-        gmail={data?.gmail?.error}
+      <MiniIntegrations
+        selected={selected}
+        setSelected={setSelected}
+        errors={{
+          github: data?.github?.error,
+          notion: data?.notion?.error,
+          googleDrive: data?.googleDrive?.error,
+          gmail: data?.gmail?.error,
+        }}
       />
       {data ? (
         <>
@@ -249,47 +253,83 @@ function Home() {
   );
 }
 
-function ErrorUI({
-  github,
-  notion,
-  googleDrive,
-  gmail,
+function MiniIntegrations({
+  selected,
+  setSelected,
+  errors,
 }: {
-  github?: Error | null;
-  notion?: Error | null;
-  googleDrive?: Error | null;
-  gmail?: Error | null;
+  selected: (typeof INTEGRATIONS)[number][];
+  setSelected: (selected: (typeof INTEGRATIONS)[number][]) => void;
+  errors: {
+    github?: Error | null;
+    notion?: Error | null;
+    googleDrive?: Error | null;
+    gmail?: Error | null;
+  };
 }) {
   return (
     <div className="flex h-5 items-center justify-center gap-4">
-      {github ? (
-        <Tooltip content={`GitHub Error: ${github.message}`}>
-          <button>
-            <GithubLogo className="size-5" fill="#d60808" />
+      {(
+        [
+          {
+            key: "notion",
+            Logo: NotionLogo,
+            label: "Notion",
+            error: errors.notion,
+          },
+          {
+            key: "github",
+            Logo: GithubLogo,
+            label: "GitHub",
+            error: errors.github,
+          },
+          {
+            key: "googleDrive",
+            Logo: GoogleDriveLogo,
+            label: "Google Drive",
+            error: errors.googleDrive,
+          },
+          {
+            key: "gmail",
+            Logo: GmailLogo,
+            label: "Gmail",
+            error: errors.gmail,
+          },
+        ] as const
+      ).map(({ key, Logo, label, error }) => (
+        <Tooltip
+          key={key}
+          content={
+            error
+              ? error.message
+                ? `${label} Error: ${error.message}`
+                : `Unknown ${label} error`
+              : `Toggle ${label} results`
+          }
+        >
+          <button
+            className="cursor-pointer"
+            onClick={() => {
+              setSelected(
+                selected.includes(key)
+                  ? selected.filter((i) => i !== key)
+                  : [...selected, key],
+              );
+            }}
+          >
+            <Logo
+              className="size-5"
+              fill={
+                error
+                  ? "#d60808"
+                  : selected.includes(key)
+                    ? undefined
+                    : "#dddddd"
+              }
+            />
           </button>
         </Tooltip>
-      ) : null}
-      {notion ? (
-        <Tooltip content={`Notion Error: ${notion.message}`}>
-          <button>
-            <NotionLogo className="size-5" fill="#d60808" />
-          </button>
-        </Tooltip>
-      ) : null}
-      {googleDrive ? (
-        <Tooltip content={`Google Drive Error: ${googleDrive.message}`}>
-          <button>
-            <GoogleDriveLogo className="size-5" fill="#d60808" />
-          </button>
-        </Tooltip>
-      ) : null}
-      {gmail ? (
-        <Tooltip content={`Gmail Error: ${gmail.message}`}>
-          <button>
-            <GmailLogo className="size-5" fill="#d60808" />
-          </button>
-        </Tooltip>
-      ) : null}
+      ))}
     </div>
   );
 }
