@@ -27,12 +27,7 @@ export const Route = createRootRouteWithContext<{
       {
         title: "AnySearch",
       },
-    ],
-    links: [
-      { rel: "stylesheet", href: globalCss },
-      { rel: "icon", href: "/favicon.ico" },
-      { rel: "og:image", href: "/opengraph.png" },
-      { rel: "image_src", href: "/opengraph.png" },
+      { property: "og:image", content: "/opengraph.png" },
       { property: "og:image:width", content: "1280" },
       { property: "og:image:height", content: "640" },
       { property: "og:title", content: "AnySearch" },
@@ -41,6 +36,11 @@ export const Route = createRootRouteWithContext<{
         content:
           "AnySearch lets you search across Notion, GitHub, Google Drive, and Gmail from one place.",
       },
+    ],
+    links: [
+      { rel: "stylesheet", href: globalCss },
+      { rel: "icon", href: "/favicon.ico" },
+      { rel: "image_src", href: "/opengraph.png" },
     ],
   }),
   component: RootComponent,
