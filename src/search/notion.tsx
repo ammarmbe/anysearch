@@ -217,14 +217,9 @@ export async function notionSearch({
   }
 
   try {
-    const response = await fetch("/notion/v1/search", {
+    const response = await fetch("/notion", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(queryParameters),
+      body: JSON.stringify({ ...queryParameters, accessToken }),
       signal,
     });
 
