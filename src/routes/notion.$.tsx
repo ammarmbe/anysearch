@@ -6,8 +6,6 @@ export const ServerRoute = createServerFileRoute("/notion/$").methods({
     const notionPath = url.pathname.replace(/^\/notion\/?/, "");
     const notionUrl = `https://api.notion.com/${notionPath}${url.search}`;
 
-    console.log("notionUrl", notionUrl);
-
     const headers = new Headers(request.headers);
     headers.delete("host");
     if (headers.has("origin")) {
@@ -39,6 +37,8 @@ export const ServerRoute = createServerFileRoute("/notion/$").methods({
     responseHeaders.delete("content-encoding");
     const body = notionResponse.body;
 
+    console.log("notionResponse", notionResponse);
+
     return new Response(body, {
       status: notionResponse.status,
       statusText: notionResponse.statusText,
@@ -49,8 +49,6 @@ export const ServerRoute = createServerFileRoute("/notion/$").methods({
     const url = new URL(request.url);
     const notionPath = url.pathname.replace(/^\/notion\/?/, "");
     const notionUrl = `https://api.notion.com/${notionPath}${url.search}`;
-
-    console.log("notionUrl", notionUrl);
 
     const headers = new Headers(request.headers);
     headers.delete("host");
@@ -78,6 +76,8 @@ export const ServerRoute = createServerFileRoute("/notion/$").methods({
     // Remove Content-Encoding from response to prevent decoding errors
     responseHeaders.delete("content-encoding");
     const body = notionResponse.body;
+
+    console.log("notionResponse", notionResponse);
 
     return new Response(body, {
       status: notionResponse.status,
