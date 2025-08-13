@@ -9,6 +9,7 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "sonner";
 import globalCss from "../global.css?url";
 
@@ -60,6 +61,7 @@ function RootComponent() {
           <Toaster />
         </Theme>
         <Scripts />
+        <Analytics />
       </body>
     </html>
   );

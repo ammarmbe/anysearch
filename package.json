@@ -33,6 +33,7 @@
     "@tanstack/react-router": "^1.130.12",
     "@tanstack/react-router-ssr-query": "^1.131.2",
     "@tanstack/react-start": "^1.130.16",
+    "@vercel/analytics": "^1.5.0",
     "ai": "^5.0.10",
     "arctic": "^3.7.0",
     "clsx": "^2.1.1",

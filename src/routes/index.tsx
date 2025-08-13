@@ -10,14 +10,20 @@ import {
   TSession,
   useSession,
 } from "@/utils/helpers";
-import { IconButton, Spinner, TextField, Tooltip } from "@radix-ui/themes";
+import {
+  IconButton,
+  Link,
+  Spinner,
+  TextField,
+  Tooltip,
+} from "@radix-ui/themes";
 import {
   keepPreviousData,
   skipToken,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link as RouterLink } from "@tanstack/react-router";
 import { LucideSearch, LucideSparkles, LucideX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -196,6 +202,17 @@ function Home() {
         query={query}
         isLoading={isLoading}
       />
+
+      <p className="text-2 text-gray-9 absolute bottom-3">
+        &copy; {new Date().getFullYear()} ambe ·{" "}
+        <Link asChild>
+          <RouterLink to="/terms">Terms</RouterLink>
+        </Link>{" "}
+        ·{" "}
+        <Link asChild>
+          <RouterLink to="/privacy">Privacy</RouterLink>
+        </Link>
+      </p>
     </div>
   );
 }
