@@ -6,6 +6,8 @@ export const ServerRoute = createServerFileRoute("/notion/$").methods({
     const notionPath = url.pathname.replace(/^\/notion\/?/, "");
     const notionUrl = `https://api.notion.com/${notionPath}${url.search}`;
 
+    console.log("notionUrl", notionUrl);
+
     const headers = new Headers(request.headers);
     headers.delete("host");
     if (headers.has("origin")) {
@@ -47,6 +49,8 @@ export const ServerRoute = createServerFileRoute("/notion/$").methods({
     const url = new URL(request.url);
     const notionPath = url.pathname.replace(/^\/notion\/?/, "");
     const notionUrl = `https://api.notion.com/${notionPath}${url.search}`;
+
+    console.log("notionUrl", notionUrl);
 
     const headers = new Headers(request.headers);
     headers.delete("host");
