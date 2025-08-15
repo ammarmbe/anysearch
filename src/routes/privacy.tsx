@@ -92,7 +92,36 @@ function RouteComponent() {
         <hr className="my-6" />
 
         <h2 className="mb-2 text-xl font-semibold text-gray-800">
-          4. Sharing Your Information
+          4. Data Retention &amp; Deletion
+        </h2>
+        <p className="mb-2 text-gray-700">
+          We retain your data only as long as necessary to provide our services:
+        </p>
+        <ul className="mb-4 list-inside list-disc space-y-1 text-gray-700">
+          <li>
+            <strong>Access tokens and usernames</strong> are retained only while
+            your accounts remain connected to AnySearch
+          </li>
+          <li>
+            <strong>Google data:</strong> We do not store any Google user data
+            beyond the access tokens required for authentication. No files,
+            emails, or personal content from Google services is retained on our
+            servers
+          </li>
+          <li>
+            <strong>Search results</strong> are displayed temporarily during
+            your session and are not stored permanently
+          </li>
+        </ul>
+        <p className="mb-6 text-gray-700">
+          You can delete all stored data by unlinking your accounts from
+          AnySearch, which will immediately remove all associated access tokens
+          and usernames from our systems.
+        </p>
+        <hr className="my-6" />
+
+        <h2 className="mb-2 text-xl font-semibold text-gray-800">
+          5. Sharing Your Information
         </h2>
         <p className="mb-6 text-gray-700">
           We do not sell, trade, or share your information with third parties,
@@ -101,10 +130,10 @@ function RouteComponent() {
         <hr className="my-6" />
 
         <h2 className="mb-2 text-xl font-semibold text-gray-800">
-          5. Your Choices
+          6. Your Choices
         </h2>
         <p className="mb-2 text-gray-700">
-          You can revoke AnySearch’s access to your connected accounts at any
+          You can revoke AnySearch's access to your connected accounts at any
           time by:
         </p>
         <ul className="mb-6 list-inside list-disc space-y-1 text-gray-700">
@@ -117,7 +146,7 @@ function RouteComponent() {
         <hr className="my-6" />
 
         <h2 className="mb-2 text-xl font-semibold text-gray-800">
-          6. Changes to This Policy
+          7. Changes to This Policy
         </h2>
         <p className="mb-6 text-gray-700">
           We may update this Privacy Policy from time to time. If we make
@@ -127,7 +156,7 @@ function RouteComponent() {
         <hr className="my-6" />
 
         <h2 className="mb-2 text-xl font-semibold text-gray-800">
-          7. Contact Us
+          8. Contact Us
         </h2>
         <p className="mb-2 text-gray-700">
           If you have questions about this Privacy Policy or our data practices,
